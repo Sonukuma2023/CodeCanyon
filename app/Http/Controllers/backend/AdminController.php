@@ -207,14 +207,26 @@ class AdminController extends Controller
         // $thumbnailPath = $request->hasFile('thumbnail') ? $request->file('thumbnail')->store('uploads/thumbnails', 'public') : null;
 		
 		if ($request->hasFile('thumbnail')) {
-			$file = $request->file('thumbnail'); 
-			$thumbnailName = $file->getClientOriginalName();
-			$thumbnailPath = $file->storeAs('uploads/thumbnails', $thumbnailName, 'public');
+			$thumbnailName = time() . '---' . $request->file('thumbnail')->getClientOriginalName();
+			$file = $request->file('thumbnail');
+			$file->move(public_path('storage/uploads/thumbnails'), $thumbnailName);
+			$thumbnailPath = 'storage/uploads/thumbnails/' . $thumbnailName;
 		} else {
 			$thumbnailPath = null;
+			$thumbnailName = null;
 		}
 		
-        $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
+        // $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
+
+        if ($request->hasFile('inline_preview')) {
+			$inlinePreviewName = time() . '---' . $request->file('inline_preview')->getClientOriginalName();
+			$inlineFile = $request->file('inline_preview');
+			$inlineFile->move(public_path('storage/uploads/inline_previews'), $inlinePreviewName);
+			$inlinePreviewPath = 'storage/uploads/inline_previews/' . $inlinePreviewName;
+		} else {
+			$inlinePreviewPath = null;
+			$inlinePreviewName = null;
+		}
 
         if ($request->hasFile('main_files')) {
             foreach ($request->file('main_files') as $file) {
@@ -257,8 +269,8 @@ class AdminController extends Controller
                 'category_id' => $request->category_id,
                 'regular_license_price' => $request->regular_license_price,
                 'extended_license_price' => $request->extended_license_price,
-                'thumbnail' => $thumbnailPath,
-                'inline_preview' => $inlinePreviewPath,
+                'thumbnail' => $thumbnailName,
+                'inline_preview' => $inlinePreviewName,
                 'main_files' => json_encode($mainFilePaths),
                 'preview' => json_encode($previewPaths),
                 'live_preview' => json_encode($livePreviewPaths),

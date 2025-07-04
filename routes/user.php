@@ -54,8 +54,9 @@ Route::middleware(['auth', 'role:user'])
 		Route::get('/community/list', [UserController::class, 'communityList'])->name('user.communityList');
 		Route::get('/fetch/community/list', [UserController::class, 'fetchCommunityList'])->name('user.fetchCommunityList');
 		
-		
+		Route::get('/category/products/{slug}', [UserController::class, 'showCategoryProducts'])->name('user.showCategoryProducts');
+		Route::post('/add/whislist', [UserController::class, 'addWhislist'])->name('user.addWhislist');
+
+        Route::post('save/cart/{id}',[CartController::class,'saveCart'])->name('user.saveCart');
 		
     });
-	
-	Route::get('/category/products/{slug}', [UserController::class, 'showCategoryProducts'])->name('user.showCategoryProducts');

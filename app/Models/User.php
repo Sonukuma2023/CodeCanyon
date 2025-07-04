@@ -72,4 +72,9 @@ class User extends Authenticatable
 	{
 		return $this->hasMany(Notification::class, 'sender_id');
 	}
+
+    public function wishlist()
+	{
+		return $this->belongsToMany(Product::class, 'wishlists', 'user_id', 'product_id')->withTimestamps();;
+	}
 }

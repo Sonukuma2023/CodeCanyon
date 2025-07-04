@@ -246,18 +246,61 @@ class UserController extends Controller
 		return response()->json($communities);
 	}
 	
+	// public function showCategoryProducts($slug)
+	// {
+	// 	$categories = Category::latest()->get();
+    //     $products = Product::with('category')->latest()->get();
+    //     // view()->share('categories', $categories);
+    //     $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+		
+	// 	$category = Category::where('name', $slug)->firstOrFail();
+	// 	$products = $category->products()->latest()->get();
+
+	// 	return view('user.category-products', compact('category', 'products', 'categories', 'products', 'navbarCategories'));
+	// } 
+
 	public function showCategoryProducts($slug)
 	{
 		$categories = Category::latest()->get();
-        $products = Product::with('category')->latest()->get();
-        // view()->share('categories', $categories);
-        $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-		
-		$category = Category::where('name', $slug)->firstOrFail();
-		$products = $category->products()->latest()->get();
+		$navbarCategories = Category::orderBy('created_at', 'asc')->get();
 
-		return view('user.category-products', compact('category', 'products', 'categories', 'products', 'navbarCategories'));
-	} 
+		$category = Category::where('name', $slug)->firstOrFail();
+
+		$products = $category->products()->with('wishlistedBy')->latest()->get();
+
+		if (auth()->check()) {
+			$userWishlist = auth()->user()->wishlist->pluck('id')->toArray();
+
+			$products->each(function ($product) use ($userWishlist) {
+				$product->is_wishlisted = in_array($product->id, $userWishlist);
+			});
+		} else {
+			$products->each(function ($product) {
+				$product->is_wishlisted = false;
+			});
+		}
+
+		return view('user.category-products', compact('category', 'products', 'categories', 'navbarCategories'));
+	}
+
+
+	public function addWhislist(Request $request)
+	{
+		$request->validate([
+			'product_id' => 'required|exists:products,id'
+		]);
+
+		$user = auth()->user();
+		$productId = $request->product_id;
+
+		if ($user->wishlist()->where('product_id', $productId)->exists()) {
+			$user->wishlist()->detach($productId);
+			return response()->json(['status' => 'removed']);
+		} else {
+			$user->wishlist()->attach($productId);
+			return response()->json(['status' => 'added']);
+		}
+	}
 
 
 }
