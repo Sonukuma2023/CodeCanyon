@@ -36,7 +36,7 @@
         </thead>
         <tbody id="communityTableBody">
             <tr>
-                <td colspan="6" class="text-muted text-center">Loading...</td>
+                <td colspan="6" class="text-muted text-center text-white">Loading...</td>
             </tr>
         </tbody>
     </table>
@@ -77,7 +77,7 @@
     }
 
     $(document).ready(loadCommunityData);
-	
+
 	var channel = pusher.subscribe('my-channel');
 	  channel.bind('CommunityCreated', function(data) {
 		console.log('Received data:', data);
