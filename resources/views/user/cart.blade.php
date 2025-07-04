@@ -20,7 +20,6 @@
 
 <div class="container">
     <h1 class="section-title mb-4">Your Shopping Cart</h1>
-
     <div class="cart-content-wrapper">
         @if(count($cartItems) > 0)
         <div class="row g-4">
@@ -31,8 +30,7 @@
                         @foreach($cartItems as $id => $item)
                         <div class="row g-3 align-items-center py-3 border-bottom">
                             <div class="col-md-2">
-                                <img src="{{ asset('frontend/images/6.jpg') }}" alt="{{ $item['name'] }}"
-                                    class="img-fluid rounded cart-item-img">
+                                <img src="{{ asset('storage/uploads/thumbnails/' . $item->product->thumbnail) }}" alt="{{ $item['name'] }}" class="img-fluid rounded cart-item-img">
                             </div>
                             <div class="col-md-6">
                                 <h5 class="mb-1">{{ $item->product->name }}</h5>
@@ -107,6 +105,9 @@
             <i class="fas fa-shopping-cart display-4 text-secondary mb-4"></i>
             <h2 class="h3 mb-3">Your cart is empty</h2>
             <p class="text-secondary mb-4">Looks like you haven't added any items to your cart yet.</p>
+            <a href="{{ route('user.dashboard') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i> Continue Shopping
+            </a>
         </div>
         @endif
     </div>
@@ -145,13 +146,16 @@
                         if (response.success) {
                             button.closest('.row').remove();
                             $('.cart-count').text(response.cartCount);
-
+                            updateCartSummary(response.summary);
                             if (response.cartCount == 0) {
                                 $('.cart-content-wrapper').html(`
                                     <div class="text-center py-5">
                                         <i class="fas fa-shopping-cart display-4 text-secondary mb-4"></i>
                                         <h2 class="h3 mb-3">Your cart is empty</h2>
                                         <p class="text-secondary mb-4">Looks like you haven't added any items to your cart yet.</p>
+                                        <a href="{{ route('user.dashboard') }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-arrow-left me-1"></i> Continue Shopping
+                                        </a>
                                     </div>
                                 `);
                             }
@@ -177,6 +181,7 @@
             type: 'POST',
             success: function (response) {
                 if (response.success) {
+                    $('.cart-count').text(response.summary.totalItems);
                     button.closest('.row').find('.quantity-input').val(response.quantity);
                     updateCartSummary(response.summary);
                 }
@@ -198,11 +203,13 @@
             success: function (response) {
                 if (response.success) {
                     if (response.quantity > 0) {
+                         $('.cart-count').text(response.quantity);
                         button.closest('.row').find('.quantity-input').val(response.quantity);
                         updateCartSummary(response.summary);
                     } else {
                         button.closest('.row').remove();
                         if (response.cartCount == 0) {
+                            $('.cart-count').text(response.quantity);
                             $('.cart-items-section').remove();
                             $('.cart-summary-section').remove();
                             $('.cart-content-wrapper').html(`
@@ -210,6 +217,9 @@
                                     <i class="fas fa-shopping-cart display-4 text-secondary mb-4"></i>
                                     <h2 class="h3 mb-3">Your cart is empty</h2>
                                     <p class="text-secondary mb-4">Looks like you haven't added any items to your cart yet.</p>
+                                    <a href="{{ route('user.dashboard') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-arrow-left me-1"></i> Continue Shopping
+                                    </a>
                                 </div>
                             `);
                         }

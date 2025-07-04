@@ -92,7 +92,7 @@ class CartController extends Controller
 
             $cartCount = Cart::where('user_id', auth()->id())->sum('quantity');
 
-            return response()->json(['success' => true, 'message' => 'Item removed from cart', 'cartCount' => $cartCount]);
+            return response()->json(['success' => true, 'message' => 'Item removed from cart', 'cartCount' => $cartCount, 'summary' => $this->getCartSummary()]);
         }
 
         return response()->json(['success' => false, 'message' => 'Item not found or unauthorized'], 404);
@@ -282,6 +282,19 @@ class CartController extends Controller
             'cartCount' => $cartCount
         ]);
     }
+
+
+    public function userCartCount() 
+	{
+		$user = auth()->user();
+		$cartCount = 0;
+
+		if ($user) {
+			$cartCount = Cart::where('user_id', $user->id)->sum('quantity');
+		}
+
+		return response()->json(['cartCount' => $cartCount]);
+	}
 
 
 }

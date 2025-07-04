@@ -58,5 +58,6 @@ Route::middleware(['auth', 'role:user'])
 		Route::post('/add/whislist', [UserController::class, 'addWhislist'])->name('user.addWhislist');
 
         Route::post('save/cart/{id}',[CartController::class,'saveCart'])->name('user.saveCart');
+        Route::get('user/cart/count',[CartController::class,'userCartCount'])->name('user.userCartCount');
 		
     });

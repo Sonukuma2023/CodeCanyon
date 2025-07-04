@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Cart;
 use Illuminate\Support\Facades\Auth;
 use Stripe\Stripe;
 use Stripe\Charge;
@@ -15,9 +16,9 @@ class CheckoutController extends Controller
 {
     public function processCheckout(Request $request)
     {
-        // 1) Prevent empty cart checkout
-        $cartItems = session()->get('cart', []);
-        if (empty($cartItems)) {
+        $cartItems = Cart::with('product')->where('user_id', auth()->id())->get();
+
+        if ($cartItems->isEmpty()) {
             return redirect()
                 ->route('dashboard')
                 ->with('error', 'Your cart is empty. Please add products before checking out.');
@@ -38,13 +39,13 @@ class CheckoutController extends Controller
         ]);
 
         // 3) Calculate order totals
-        $subtotal = 0;
-        foreach ($cartItems as $item) {
-            $subtotal += $item['price'] * $item['quantity'];
-        }
+        $subtotal = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
         $discount = 0;
-        $tax      = $subtotal * 0.18;
-        $total    = $subtotal - $discount + $tax;
+        $tax = round($subtotal * 0.18, 2);
+        $total = $subtotal - $discount + $tax;
 
         if ($validatedData['payment_method'] === 'card') {
             // 4) Process Stripe payment
@@ -88,13 +89,13 @@ class CheckoutController extends Controller
                     'transaction_id' => $stripeTransactionId,
                 ]);
 
-                foreach ($cartItems as $id => $item) {
+                foreach ($cartItems as $item) {
                     OrderItem::create([
                         'order_id'   => $order->id,
-                        'product_id' => $id,
-                        'name'       => $item['name'] ?? 'N/A',
-                        'quantity'   => $item['quantity'],
-                        'price'      => $item['price'],
+                        'product_id' => $item->product_id,
+                        'name'       => $item->product->name ?? '',
+                        'quantity'   => $item->quantity,
+                        'price'      => $item->price,
                     ]);
                 }
 
@@ -111,6 +112,7 @@ class CheckoutController extends Controller
 
             // 6) Clear cart and redirect with order ID in URL
             session()->forget('cart');
+            Cart::where('user_id', auth()->id())->delete();
 
             return redirect()
                 ->route('checkout.success', ['order' => $order->id]);
@@ -138,13 +140,13 @@ class CheckoutController extends Controller
                 'status'         => 'processing',
             ]);
 
-            foreach ($cartItems as $id => $item) {
+            foreach ($cartItems as $item) {
                 OrderItem::create([
                     'order_id'   => $order->id,
-                    'product_id' => $id,
-                    'name'       => $item['name'] ?? 'N/A',
-                    'quantity'   => $item['quantity'],
-                    'price'      => $item['price'],
+                    'product_id' => $item->product_id,
+                    'name'       => $item->product->name ?? '',
+                    'quantity'   => $item->quantity,
+                    'price'      => $item->price,
                 ]);
             }
 
@@ -156,6 +158,7 @@ class CheckoutController extends Controller
         }
 
         session()->forget('cart');
+        Cart::where('user_id', auth()->id())->delete();
         
         return redirect()->route('checkout.success', ['order_id' => $order->id]);
 

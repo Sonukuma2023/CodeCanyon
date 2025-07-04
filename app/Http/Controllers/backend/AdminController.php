@@ -651,7 +651,7 @@ class AdminController extends Controller
 		foreach ($communities as $item) {
 			$data_arr[] = [
 				'id' => '<span class="text-xs fw-bold">' . $item->id . '</span>',
-				'complaint' => '<span class="text-xs fw-bold text-dark">' . htmlspecialchars($item->complaint) . '</span>',
+				'complaint' => '<span class="text-xs fw-bold text-muted">' . htmlspecialchars($item->complaint) . '</span>',
 				'comment' => '<span class="text-xs text-muted">' . nl2br(e($item->comment)) . '</span>',
 				'user' => '<span class="text-xs fw-bold text-primary">' . ($item->user?->name ?? 'Unknown') . '</span>',
 				'created_at_human' => '<span class="text-xs text-secondary">' . $item->created_at->diffForHumans() . '</span>',
