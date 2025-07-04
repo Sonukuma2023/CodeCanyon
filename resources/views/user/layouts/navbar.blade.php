@@ -63,3 +63,21 @@
         </ul>
     </nav>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            url: "{{ route('user.userCartCount') }}",
+            method: "GET",
+            success: function(response) {
+                $('.cart-count').text(response.cartCount);
+            },
+            error: function(xhr) {
+                console.error("Failed to fetch cart count:", xhr);
+            }
+        });
+    });
+</script>
+
+
+

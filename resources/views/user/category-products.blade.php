@@ -1,5 +1,5 @@
 @extends('user.layouts.master')
-
+@section('title', $category->name . ' Script Page')
 @section('content')
 <section class="scripts-section py-5">
     <div class="container">
@@ -12,32 +12,34 @@
                     $previewFiles = json_decode($product->preview, true) ?? [];
                     $livePreviewFiles = json_decode($product->live_preview, true) ?? [];
 
-                    $thumbnail = $product->thumbnail 
-    ? asset('storage/' . $product->thumbnail) 
-    : asset('default-thumbnail.jpg');
-
-echo $thumbnail;
-echo "<br>";
-echo "http://127.0.0.1:8000/storage/uploads/thumbnails/5MJ7c8yMcChpcTpYqS2Ngw7qiKowM1nULjHSs9bl.jpg";
-
+                    $thumbnail = $product->thumbnail ? asset('storage/uploads/thumbnails/' . $product->thumbnail) : asset('default-thumbnail.jpg');
                     $inlinePreview = $product->inline_preview ? asset('storage/' . $product->inline_preview) : '#';
+                    $salesCount = $product->sales ?? rand(10, 200);
+                    $rating = $product->rating ?? 4.5;
                 @endphp
 
-                <div class="col-md-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        <img src="{{ asset('storage/' . $product->thumbnail) }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ $product->name }} thumbnail">
-						<img src="http://127.0.0.1:8000/storage/uploads/thumbnails/JAo79hsRhR3qlWAnjfRS1zjpxNqVYJaTL6MMDQit.jpg" />
-
+                <div class="col-md-3">
+                    <div class="card h-100 shadow-sm border-0 position-relative">
+					<div class="position-absolute top-0 end-0 m-2">
+						<button type="button" class="btn btn-light btn-sm p-1 rounded-circle shadow-sm add-to-wishlist" data-id="{{ $product->id }}">
+							<i class="bi bi-heart{{ $product->is_wishlisted ? '-fill text-danger' : '' }}"></i>
+						</button>
+					</div>
+	
+						<img src="{{ $thumbnail }}" class="card-img-top" style="height: 160px; object-fit: cover;" alt="{{ $product->name }} thumbnail">
 
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ $product->name }}</h5>
-                            <p class="card-text text-muted">{{ Str::limit($product->description, 100) }}</p>
+                            <h6 class="fw-bold mb-1">{{ Str::limit($product->name, 40) }}</h6>
+                            <p class="text-muted small mb-2">{{ Str::limit($product->description, 60) }}</p>
 
-                            @if($product->inline_preview)
-                                <a href="{{ $inlinePreview }}" target="_blank" class="btn btn-outline-secondary btn-sm mb-2">
-                                    Inline Preview
-                                </a>
-                            @endif
+                            <div class="mb-2 d-flex align-items-center small">
+                                <div class="text-warning me-2">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="bi {{ $i <= floor($rating) ? 'bi-star-fill' : ($i - $rating < 1 ? 'bi-star-half' : 'bi-star') }}"></i>
+                                    @endfor
+                                </div>
+                                <span class="text-muted">({{ number_format($salesCount) }} Sales)</span>
+                            </div>
 
                             @if(!empty($mainFiles))
                                 <div class="mb-2">
@@ -69,7 +71,20 @@ echo "http://127.0.0.1:8000/storage/uploads/thumbnails/5MJ7c8yMcChpcTpYqS2Ngw7qi
                                 </div>
                             @endif
 
-                            <a href="#" class="btn btn-primary btn-sm mt-auto">View Script</a>
+                            <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-primary">${{ $product->regular_license_price }}</span>
+
+                                <div class="d-flex gap-1">
+                                    @if($product->inline_preview)
+                                        <a href="{{ $inlinePreview }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                            Live Preview
+                                        </a>
+                                    @endif
+                                      <button type="button" class="btn btn-outline-dark btn-sm add-to-cart" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
+										<i class="bi bi-cart-plus"></i>
+									</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -84,3 +99,70 @@ echo "http://127.0.0.1:8000/storage/uploads/thumbnails/5MJ7c8yMcChpcTpYqS2Ngw7qi
     </div>
 </section>
 @endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function () {
+        $.ajaxSetup({
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+        });
+
+
+        $(document).on('click', '.add-to-wishlist', function (e) {
+			e.preventDefault();
+
+			const button = $(this);
+			const productId = button.data('id');
+			const icon = button.find('i');
+
+			$.ajax({
+				url: "{{ route('user.addWhislist') }}",
+				method: "POST",
+				data: {
+					product_id: productId,
+					_token: "{{ csrf_token() }}"
+				},
+				success: function (response) {
+					if (response.status === 'added') {
+						icon.removeClass('bi-heart').addClass('bi-heart-fill text-danger');
+					} else if (response.status === 'removed') {
+						icon.removeClass('bi-heart-fill text-danger').addClass('bi-heart');
+					}
+				},
+				error: function (xhr) {
+					console.log(xhr);
+				}
+			});
+		});
+
+
+        $(document).on('click', '.add-to-cart', function (e) {
+            e.preventDefault();
+
+            const button = $(this);
+            const productId = button.data('id');
+            const quantity = 1;
+            const price = button.data('price');
+
+            $.ajax({
+                url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
+                type: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    quantity: quantity,
+                    price: price
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $('.cart-count').text(response.cartCount);
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr); 
+                }
+            });
+        });
+    });
+</script>
+@endsection
+
