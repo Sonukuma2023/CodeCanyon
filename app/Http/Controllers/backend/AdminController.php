@@ -211,6 +211,12 @@ class AdminController extends Controller
 
 
 		if ($request->hasFile('thumbnail')) {
+
+			$thumbnailName = time() . '---' . $request->file('thumbnail')->getClientOriginalName();
+			$file = $request->file('thumbnail');
+			$file->move(public_path('storage/uploads/thumbnails'), $thumbnailName);
+			$thumbnailPath = 'storage/uploads/thumbnails/' . $thumbnailName;
+
 			$file = $request->file('thumbnail');
 
 			$thumbnailName = $file->getClientOriginalName();
@@ -218,11 +224,25 @@ class AdminController extends Controller
 			$thumbnailPath = $file->storeAs('uploads/thumbnails', $thumbnailName, 'public');
 
 
+
 		} else {
 			$thumbnailPath = null;
+			$thumbnailName = null;
 		}
 
-        $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
+		
+        // $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
+
+        if ($request->hasFile('inline_preview')) {
+			$inlinePreviewName = time() . '---' . $request->file('inline_preview')->getClientOriginalName();
+			$inlineFile = $request->file('inline_preview');
+			$inlineFile->move(public_path('storage/uploads/inline_previews'), $inlinePreviewName);
+			$inlinePreviewPath = 'storage/uploads/inline_previews/' . $inlinePreviewName;
+		} else {
+			$inlinePreviewPath = null;
+			$inlinePreviewName = null;
+		}
+
 
         if ($request->hasFile('main_files')) {
             foreach ($request->file('main_files') as $file) {
@@ -265,11 +285,13 @@ class AdminController extends Controller
                 'category_id' => $request->category_id,
                 'regular_license_price' => $request->regular_license_price,
                 'extended_license_price' => $request->extended_license_price,
-                'thumbnail' => $thumbnailPath,
-                'inline_preview' => $inlinePreviewPath ?? '',
-                'main_files' => json_encode($mainFilePaths)??'',
-                'preview' => json_encode($previewPaths)?? '',
-                'live_preview' => json_encode($livePreviewPaths) ?? '',
+
+                'thumbnail' => $thumbnailName,
+                'inline_preview' => $inlinePreviewName,
+                'main_files' => json_encode($mainFilePaths),
+                'preview' => json_encode($previewPaths),
+                'live_preview' => json_encode($livePreviewPaths),
+
                 'status' => $request->status,
             ]);
         } catch (\Exception $e) {
@@ -647,7 +669,7 @@ class AdminController extends Controller
 		foreach ($communities as $item) {
 			$data_arr[] = [
 				'id' => '<span class="text-xs fw-bold">' . $item->id . '</span>',
-				'complaint' => '<span class="text-xs fw-bold text-dark">' . htmlspecialchars($item->complaint) . '</span>',
+				'complaint' => '<span class="text-xs fw-bold text-muted">' . htmlspecialchars($item->complaint) . '</span>',
 				'comment' => '<span class="text-xs text-muted">' . nl2br(e($item->comment)) . '</span>',
 				'user' => '<span class="text-xs fw-bold text-primary">' . ($item->user?->name ?? 'Unknown') . '</span>',
 				'created_at_human' => '<span class="text-xs text-secondary">' . $item->created_at->diffForHumans() . '</span>',

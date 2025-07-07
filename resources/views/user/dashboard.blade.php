@@ -198,12 +198,8 @@
                                 <div class="product-footer">
                                     <!-- Product price -->
                                     <div class="price">${{ number_format($product->regular_license_price, 2) }}</div>
-                                        <form action="{{ route('cart.add', $product->id) }}" method="POST">
-                                            @csrf
-                                            <button class="btn btn-primary btn-sm" style="border:none;">
-                                            Add to Cart</button>
-                                        </form>
-                                </div>
+                                       <button class="btn btn-primary btn-sm add-to-cart-btn" data-id="{{ $product->id }}" style="border:none;">Add to Cart</button>
+                                    </div>
                             </div>
                         </div>
                     @endif
@@ -366,5 +362,33 @@ $(document).ready(function () {
 		markMessagesAsRead();
 	});
 });
+
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    $(document).on('click', '.add-to-cart-btn', function (e) {
+        e.preventDefault();
+
+        const button = $(this);
+        const productId = button.data('id');
+
+        $.ajax({
+            url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
+            type: "POST",
+            success: function (response) {
+                if (response.success) {
+                    $('.cart-count').text(response.cartCount);
+                } else {
+                    console.log(response);
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr);
+            }
+        });
+    });
 </script>
 @endsection
