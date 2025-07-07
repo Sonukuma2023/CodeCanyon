@@ -195,10 +195,10 @@ class AdminController extends Controller
             'regular_license_price' => 'required|numeric',
             'extended_license_price' => 'required|numeric',
             'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
-            // 'inline_preview' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
-            // 'main_files.*' => 'required|mimes:zip|max:102400',
-            // 'preview.*' => 'required|mimes:zip|max:102400',
-            // 'live_preview.*' => 'nullable|mimes:zip|max:102400',
+            'inline_preview' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
+            'main_files.*' => 'required|mimes:zip|max:102400',
+            'preview.*' => 'required|mimes:zip|max:102400',
+            'live_preview.*' => 'nullable|mimes:zip|max:102400',
             'status' => 'required|in:approved,pending',
         ]);
 
@@ -230,7 +230,7 @@ class AdminController extends Controller
 			$thumbnailName = null;
 		}
 
-		
+
         // $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
 
         if ($request->hasFile('inline_preview')) {
@@ -704,5 +704,12 @@ class AdminController extends Controller
 			'message' => 'Reply saved successfully.'
 		]);
 	}
+
+    public function single_categories_details($name, $slug){
+
+        return $slug;
+
+
+    }
 
 }
