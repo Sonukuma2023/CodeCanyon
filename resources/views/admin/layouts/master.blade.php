@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 	<style>
 	.preview-thumbnail {
+        
 		position: relative;
 	}
 
@@ -47,13 +48,13 @@
                     @yield('content')
 
                 </div>
-                <!-- content-wrapper ends -->
+
 
             </div>
-            <!-- main-panel ends -->
+
 
         </div>
-        <!-- page-body-wrapper ends -->
+
 
     </div>
     <!-- container-scroller -->
@@ -106,7 +107,7 @@
             toastr.error("{!! implode('<br>', $errors->all()) !!}");
         @endif
     </script>
-	
+
 	<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 	<script>
 		Pusher.logToConsole = true;
@@ -114,7 +115,7 @@
 			cluster: 'ap2'
 		});
 	</script>
-	
+
 	<script>
 	function loadNotifications() {
 		$.get("{{ route('admin.fetchNotifications') }}", function (res) {
@@ -173,10 +174,10 @@
 
 	$(document).ready(function () {
 		loadNotifications();
-		setInterval(loadNotifications, 60000); 
+		setInterval(loadNotifications, 60000);
 		$('#messageDropdown').on('click', loadNotifications);
 	});
-	
+
 	var channel = pusher.subscribe('my-channel');
 	  channel.bind('NotificationSent', function(data) {
 		console.log('Received data:', data);
@@ -185,7 +186,7 @@
 	</script>
 
 
-	
+
 	@yield('scripts')
 </body>
 

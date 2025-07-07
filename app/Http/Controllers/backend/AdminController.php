@@ -180,12 +180,14 @@ class AdminController extends Controller
 
     public function addproduct()
     {
-        $categories = Category::all(); 
+        $categories = Category::all();
         return view('admin.addProduct', compact('categories'));
     }
 
     public function storeproduct(Request $request)
     {
+
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -193,10 +195,10 @@ class AdminController extends Controller
             'regular_license_price' => 'required|numeric',
             'extended_license_price' => 'required|numeric',
             'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
-            'inline_preview' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
-            'main_files.*' => 'required|mimes:zip|max:102400',
-            'preview.*' => 'required|mimes:zip|max:102400',
-            'live_preview.*' => 'nullable|mimes:zip|max:102400',
+            // 'inline_preview' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
+            // 'main_files.*' => 'required|mimes:zip|max:102400',
+            // 'preview.*' => 'required|mimes:zip|max:102400',
+            // 'live_preview.*' => 'nullable|mimes:zip|max:102400',
             'status' => 'required|in:approved,pending',
         ]);
 
@@ -205,16 +207,29 @@ class AdminController extends Controller
         $livePreviewPaths = [];
 
         // $thumbnailPath = $request->hasFile('thumbnail') ? $request->file('thumbnail')->store('uploads/thumbnails', 'public') : null;
-		
+
+
+
 		if ($request->hasFile('thumbnail')) {
+
 			$thumbnailName = time() . '---' . $request->file('thumbnail')->getClientOriginalName();
 			$file = $request->file('thumbnail');
 			$file->move(public_path('storage/uploads/thumbnails'), $thumbnailName);
 			$thumbnailPath = 'storage/uploads/thumbnails/' . $thumbnailName;
+
+			$file = $request->file('thumbnail');
+
+			$thumbnailName = $file->getClientOriginalName();
+
+			$thumbnailPath = $file->storeAs('uploads/thumbnails', $thumbnailName, 'public');
+
+
+
 		} else {
 			$thumbnailPath = null;
 			$thumbnailName = null;
 		}
+
 		
         // $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
 
@@ -227,6 +242,7 @@ class AdminController extends Controller
 			$inlinePreviewPath = null;
 			$inlinePreviewName = null;
 		}
+
 
         if ($request->hasFile('main_files')) {
             foreach ($request->file('main_files') as $file) {
@@ -262,18 +278,20 @@ class AdminController extends Controller
         }
 
         try {
-            Product::create([                
+            Product::create([
                 'user_id' => Auth::id(),
                 'name' => $request->name,
                 'description' => $request->description,
                 'category_id' => $request->category_id,
                 'regular_license_price' => $request->regular_license_price,
                 'extended_license_price' => $request->extended_license_price,
+
                 'thumbnail' => $thumbnailName,
                 'inline_preview' => $inlinePreviewName,
                 'main_files' => json_encode($mainFilePaths),
                 'preview' => json_encode($previewPaths),
                 'live_preview' => json_encode($livePreviewPaths),
+
                 'status' => $request->status,
             ]);
         } catch (\Exception $e) {
@@ -498,7 +516,7 @@ class AdminController extends Controller
 
         return redirect()->route('admin.viewproduct')->with('success', 'Product deleted successfully!');
     }
-	
+
 	public function messagePage($id)
 	{
 		$user = User::find($id);
@@ -509,7 +527,7 @@ class AdminController extends Controller
 
 		return view('admin.messages', compact('user'));
 	}
-	
+
 	public function messageSave(Request $request,$id)
 	{
 		$request->validate([
@@ -519,28 +537,28 @@ class AdminController extends Controller
 		$message = Messages::create([
 			'sender_id'   => auth()->id(),
 			'receiver_id' => $id,
-			'message'     => $request->message_content,	
+			'message'     => $request->message_content,
 			'sent_at'     => now(),
 		]);
-		
+
 		/* $url = route('user.messagePage');
-		
+
 		$notification = Notifications::create([
 			'sender_id'   => auth()->id(),
-			'receiver_id' => $id, 
+			'receiver_id' => $id,
 			'content'     => 'New message from: ' . auth()->user()->name,
 			'url'         => $url,
 			'sent_at'     => now(),
 		]); */
-		
+
 		event(new MessageSent($message));
-		
+
 		return response()->json([
 			'success' => true,
 			'message' => 'Message and notification saved successfully'
 		]);
 	}
-	
+
 	public function fetchMessages(Request $request, $id)
 	{
 		$authId = auth()->id();
@@ -560,13 +578,13 @@ class AdminController extends Controller
 			'messages' => $messages
 		]);
 	}
-	
+
 	public function adminProfile()
 	{
 		$user = User::find(auth()->id());
 		return view('admin.profile', compact('user'));
 	}
-	
+
 	public function updateProfile(Request $request)
 	{
 		$user = auth()->user();
@@ -602,26 +620,26 @@ class AdminController extends Controller
 			'message' => 'Profile updated successfully.'
 		]);
 	}
-	
+
 	public function fetchNotifications()
 	{
 		$notifications = Notifications::where('receiver_id', auth()->id())->orderBy('created_at', 'desc')->take(5)->get();
 
 		return response()->json(['notifications' => $notifications]);
 	}
-	
+
 	public function allNotificationPage()
 	{
 		return view('admin.notifications');
 	}
-	
+
 	public function fetchAllNotifications()
 	{
 		$allNotifications = Notifications::where('receiver_id', auth()->id())->orderBy('created_at', 'desc')->get();
-		
+
 		return response()->json(['allNotifications' => $allNotifications]);
 	}
-	
+
 	public function markReadAsNotifications()
 	{
 		$notifications = Notifications::where('receiver_id', auth()->id())->whereNull('read_at')->get();
@@ -669,7 +687,7 @@ class AdminController extends Controller
 		$community = Community::with('user')->findOrFail($id);
 		return view('admin.community-reply', compact('community'));
 	}
-	
+
 	public function replyCommunity(Request $request, $id)
 	{
 		$request->validate([
@@ -679,7 +697,7 @@ class AdminController extends Controller
 		$community = Community::findOrFail($id);
 		$community->admin_reply = $request->admin_reply;
 		$community->save();
-		
+
 		event(new CommunityCreated($community));
 
 		return response()->json([
