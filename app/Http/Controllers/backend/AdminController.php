@@ -13,6 +13,8 @@ use App\Models\Product;
 use App\Models\Messages;
 use App\Models\Notifications;
 use App\Models\Community;
+use App\Models\Order;
+use App\Models\Whislist;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Events\MessageSent;
@@ -704,5 +706,72 @@ class AdminController extends Controller
 			'message' => 'Reply saved successfully.'
 		]);
 	}
+
+    public function ordersPage(){
+        return view('admin.orders.orders_list');
+    }
+
+    public function fetchOrders()
+    {
+        $orders = Order::with(['user', 'items.product'])->latest()->get();
+
+        $data = $orders->map(function ($order) {
+            $productNames = $order->items->map(function ($item) {
+                return $item->product->name ?? 'N/A';
+            })->implode(', '); 
+
+            return [
+                'order_id' => $order->id,
+                'user_name' => $order->user->name ?? 'N/A',
+                'product_names' => $productNames,
+                'total' => '$ ' . number_format($order->total, 2),
+                'status' => ucfirst($order->payment_status),
+                'created_at_human' => $order->created_at->diffForHumans(),
+                'actions' => '<a href="' . route('admin.singleOrderDetails', $order->id) . '" class="btn btn-sm btn-primary">View</a>',
+            ];
+        });
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function singleOrderDetails(Order $order)
+    {
+        $order->load(['user', 'items.product']);
+
+        return view('admin.orders.single_order', compact('order'));
+    }
+
+    public function whislistPage(){
+        return view('admin.whislists.whislist_list');
+    }
+
+    public function fetchWishlist()
+    {
+        $wishlists = Whislist::with(['user', 'product'])->latest()->get();
+
+        $data = $wishlists->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'user_name' => $item->user->name ?? '',
+                'product_name' => $item->product->name ?? '',
+                'created_at_human' => $item->created_at->diffForHumans(),
+                'actions' => '<a href="' . route('admin.showWishlistDetails', $item->id) . '" class="btn btn-sm btn-primary">View</a>',
+            ];
+        });
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function showWishlistDetails($id)
+    {
+        $wishlist = Whislist::with(['user', 'product.category'])->findOrFail($id);
+
+        return view('admin.whislists.whislist_details', compact('wishlist'));
+    }
+
+
+
+
+
 
 }

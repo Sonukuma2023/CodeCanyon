@@ -12,9 +12,14 @@ class Order extends Model
         'payment_method', 'subtotal', 'discount', 'tax', 'total', 'status', 'payment_status','transaction_id'
     ];
 
-      public function items()
+    public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
 
