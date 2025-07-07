@@ -64,4 +64,11 @@ Route::middleware(['auth', 'role:admin'])
             Route::get('/details/{id}', [AdminController::class, 'showWishlistDetails'])->name('showWishlistDetails');
         });
 
+        Route::prefix('coupons')->group(function () {
+            Route::get('/add', [AdminController::class, 'couponAddPage'])->name('couponAddPage');
+            Route::post('/add', [AdminController::class, 'storeCoupon'])->name('storeCoupon');
+            Route::get('/ajax/list', [AdminController::class, 'fetchCoupons'])->name('fetchCoupons');
+            Route::get('/list', [AdminController::class, 'couponsPage'])->name('couponsPage');
+        });
+
     });

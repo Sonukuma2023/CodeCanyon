@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Events\MessageSent;
 use App\Events\CommunityCreated;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Coupons;
 
 class AdminController extends Controller
 {
@@ -211,25 +212,14 @@ class AdminController extends Controller
         // $thumbnailPath = $request->hasFile('thumbnail') ? $request->file('thumbnail')->store('uploads/thumbnails', 'public') : null;
 
 
-
-		if ($request->hasFile('thumbnail')) {
-
+		$thumbnailPath = null;
+		$thumbnailName = null;
+		
+        if ($request->hasFile('thumbnail')) {
 			$thumbnailName = time() . '---' . $request->file('thumbnail')->getClientOriginalName();
-			$file = $request->file('thumbnail');
-			$file->move(public_path('storage/uploads/thumbnails'), $thumbnailName);
+			$image = $request->file('thumbnail');
+			$image->move(public_path('storage/uploads/thumbnails'), $thumbnailName);
 			$thumbnailPath = 'storage/uploads/thumbnails/' . $thumbnailName;
-
-			$file = $request->file('thumbnail');
-
-			$thumbnailName = $file->getClientOriginalName();
-
-			$thumbnailPath = $file->storeAs('uploads/thumbnails', $thumbnailName, 'public');
-
-
-
-		} else {
-			$thumbnailPath = null;
-			$thumbnailName = null;
 		}
 
 		
@@ -769,9 +759,74 @@ class AdminController extends Controller
         return view('admin.whislists.whislist_details', compact('wishlist'));
     }
 
+    public function couponAddPage(){
+        return view('admin.coupons.add');
+    }
+
+    public function storeCoupon(Request $request){
+
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|string|unique:coupons,code|max:50',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'discount_percentage' => 'nullable|integer|min:1|max:100',
+            'minimum_order_amount' => 'required|numeric|min:0',
+            'usage_limit' => 'required|integer|min:1',
+            'expires_at' => 'required|date|after:today',
+            'active' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $coupon = Coupons::create([
+            'code' => strtoupper($request->code),
+            'discount_amount' => $request->discount_amount,
+            'discount_percentage' => $request->discount_percentage,
+            'minimum_order_amount' => $request->minimum_order_amount,
+            'usage_limit' => $request->usage_limit,
+            'expires_at' => $request->expires_at,
+            'status' => $request->active,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Coupon created successfully!',
+            'data' => $coupon
+        ]);
+    }
+
+    public function couponsPage(){
+        return view('admin.coupons.list');
+    }
 
 
+    public function fetchCoupons()
+    {
+        $coupons = Coupons::latest()->get();
 
+        $data = $coupons->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'code' => $item->code,
+                'discount_amount' => $item->discount_amount ? '$' . $item->discount_amount : '-',
+                'discount_percentage' => $item->discount_percentage . '%',
+                'minimum_order_amount' => '$' . $item->minimum_order_amount,
+                'usage_limit' => $item->usage_limit,
+                'expires_at' => $item->expires_at 
+                    ? $item->expires_at->format('d-m-Y H:i') 
+                    : 'No expiry',
+                'status' => $item->status,
+                'created_at' => $item->created_at->diffForHumans(),
+                'actions' => '<a href="#" class="btn btn-sm btn-primary">View</a>',
+            ];
+        });
 
+        return response()->json(['data' => $data]);
+    }
 
 }

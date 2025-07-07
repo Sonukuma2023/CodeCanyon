@@ -1,6 +1,26 @@
 @extends('user.layouts.master')
 @section('title', $category->name . ' Script Page')
 @section('content')
+<style>
+    .add-to-cart:disabled {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .cart-added {
+        transition: all 0.3s ease;
+    }
+
+    .btn.cart-animate {
+        animation: cartPulse 0.5s ease-in-out;
+    }
+
+    @keyframes cartPulse {
+        0%   { transform: scale(1); }
+        50%  { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+</style>
 <section class="scripts-section py-5">
     <div class="container">
         <h2 class="mb-4">{{ $category->name }} Scripts</h2>
@@ -13,7 +33,7 @@
                     $livePreviewFiles = json_decode($product->live_preview, true) ?? [];
 
                     $thumbnail = $product->thumbnail ? asset('storage/uploads/thumbnails/' . $product->thumbnail) : asset('default-thumbnail.jpg');
-                    $inlinePreview = $product->inline_preview ? asset('storage/' . $product->inline_preview) : '#';
+                    $inlinePreview = $product->inline_preview ? asset('storage/uploads/inline_previews/' . $product->inline_preview) : '#';
                     $salesCount = $product->sales ?? rand(10, 200);
                     $rating = $product->rating ?? 4.5;
                 @endphp
@@ -25,7 +45,8 @@
 							<i class="bi bi-heart{{ $product->is_wishlisted ? '-fill text-danger' : '' }}"></i>
 						</button>
 					</div>
-	
+
+                    <a href="{{ route('user.singleDetailsCategory', $product->id) }}" class="text-decoration-none text-dark">
 						<img src="{{ $thumbnail }}" class="card-img-top" style="height: 160px; object-fit: cover;" alt="{{ $product->name }} thumbnail">
 
                         <div class="card-body d-flex flex-column">
@@ -40,6 +61,8 @@
                                 </div>
                                 <span class="text-muted">({{ number_format($salesCount) }} Sales)</span>
                             </div>
+
+                            </a>
 
                             @if(!empty($mainFiles))
                                 <div class="mb-2">
@@ -80,9 +103,11 @@
                                             Live Preview
                                         </a>
                                     @endif
-                                      <button type="button" class="btn btn-outline-dark btn-sm add-to-cart" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
-										<i class="bi bi-cart-plus"></i>
-									</button>
+                                    <button type="button" class="btn btn-outline-dark btn-sm add-to-cart" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
+                                        <span class="cart-icon"><i class="bi bi-cart-plus"></i></span>
+                                        <span class="cart-added d-none"><i class="bi bi-check-circle-fill text-success"></i></span>
+                                    </button>
+
                                 </div>
                             </div>
                         </div>
@@ -137,31 +162,48 @@
 
 
         $(document).on('click', '.add-to-cart', function (e) {
-            e.preventDefault();
+        e.preventDefault();
 
-            const button = $(this);
-            const productId = button.data('id');
-            const quantity = 1;
-            const price = button.data('price');
+        const button = $(this);
+        const productId = button.data('id');
+        const quantity = 1;
+        const price = button.data('price');
 
-            $.ajax({
-                url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
-                type: "POST",
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    quantity: quantity,
-                    price: price
-                },
-                success: function (response) {
-                    if (response.success) {
-                        $('.cart-count').text(response.cartCount);
-                    }
-                },
-                error: function (xhr) {
-                    console.log(xhr); 
+        $.ajax({
+            url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                quantity: quantity,
+                price: price
+            },
+            beforeSend: function () {
+                button.prop('disabled', true);
+            },
+            success: function (response) {
+                if (response.success) {
+                    $('.cart-count').text(response.cartCount);
+
+                    // Animate feedback
+                    button.addClass('cart-animate');
+                    button.find('.cart-icon').addClass('d-none');
+                    button.find('.cart-added').removeClass('d-none');
+
+                    setTimeout(() => {
+                        button.removeClass('cart-animate');
+                        button.find('.cart-added').addClass('d-none');
+                        button.find('.cart-icon').removeClass('d-none');
+                        button.prop('disabled', false);
+                    }, 1500);
                 }
-            });
+            },
+            error: function (xhr) {
+                console.log(xhr);
+                button.prop('disabled', false);
+            }
         });
+    });
+
     });
 </script>
 @endsection

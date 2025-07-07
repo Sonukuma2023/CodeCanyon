@@ -56,6 +56,74 @@
         width: auto;
     }
 }
+.addtocart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em 1.2em;
+    border-radius: 25px;
+    border: none;
+    font-size: 0.9rem;
+    background: #0652DD;
+    color: #fff;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+    min-width: auto;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.addtocart:hover {
+    transform: scale(1.05);
+}
+
+.addtocart .pretext {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.addtocart.added .pretext {
+    opacity: 0;
+}
+
+.addtocart .done {
+    position: absolute;
+    inset: 0;
+    background: #38c172;
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    color: #fff;
+}
+
+.addtocart.added .done {
+    transform: translateX(0);
+}
+
+.addtocart .posttext {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.fa-cart-plus, .fa-check {
+    margin-right: 6px;
+    font-size: 0.9rem;
+}
 </style>
     <section class="hero">
         <div class="container">
@@ -198,7 +266,15 @@
                                 <div class="product-footer">
                                     <!-- Product price -->
                                     <div class="price">${{ number_format($product->regular_license_price, 2) }}</div>
-                                       <button class="btn btn-primary btn-sm add-to-cart-btn" data-id="{{ $product->id }}" style="border:none;">Add to Cart</button>
+                                        <button class="addtocart" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
+                                            <div class="pretext">
+                                                <i class="fas fa-cart-plus"></i> ADD TO CART
+                                            </div>
+
+                                            <div class="done">
+                                                <div class="posttext"><i class="fas fa-check"></i> ADDED</div>
+                                            </div>
+                                        </button>
                                     </div>
                             </div>
                         </div>
@@ -369,26 +445,43 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '.add-to-cart-btn', function (e) {
-        e.preventDefault();
+$(document).on('click', '.addtocart', function (e) {
+    e.preventDefault();
 
-        const button = $(this);
-        const productId = button.data('id');
+    const button = $(this);
+    const productId = button.data('id');
+    const price = button.data('price');
 
-        $.ajax({
-            url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
-            type: "POST",
-            success: function (response) {
-                if (response.success) {
-                    $('.cart-count').text(response.cartCount);
-                } else {
-                    console.log(response);
-                }
-            },
-            error: function (xhr) {
-                console.log(xhr);
+    if (button.hasClass('processing') || button.hasClass('added')) return;
+
+    button.addClass('processing');
+
+    $.ajax({
+        url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
+        type: "POST",
+        data: {
+            _token: "{{ csrf_token() }}",
+            quantity: 1,
+            price: price
+        },
+        success: function (response) {
+            if (response.success) {
+                $('.cart-count').text(response.cartCount);
+                button.addClass('added');
+
+                setTimeout(() => {
+                    button.removeClass('added processing');
+                }, 2000);
+            } else {
+                button.removeClass('processing');
+                console.log(response);
             }
-        });
+        },
+        error: function (xhr) {
+            console.log(xhr);
+            button.removeClass('processing');
+        }
     });
+});
 </script>
 @endsection
