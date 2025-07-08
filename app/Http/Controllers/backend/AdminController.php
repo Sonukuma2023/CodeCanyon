@@ -13,11 +13,14 @@ use App\Models\Product;
 use App\Models\Messages;
 use App\Models\Notifications;
 use App\Models\Community;
+use App\Models\Order;
+use App\Models\Whislist;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Events\MessageSent;
 use App\Events\CommunityCreated;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Coupons;
 
 class AdminController extends Controller
 {
@@ -180,12 +183,14 @@ class AdminController extends Controller
 
     public function addproduct()
     {
-        $categories = Category::all(); 
+        $categories = Category::all();
         return view('admin.addProduct', compact('categories'));
     }
 
     public function storeproduct(Request $request)
     {
+
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -193,10 +198,10 @@ class AdminController extends Controller
             'regular_license_price' => 'required|numeric',
             'extended_license_price' => 'required|numeric',
             'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
-            'inline_preview' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
-            'main_files.*' => 'required|mimes:zip|max:102400',
-            'preview.*' => 'required|mimes:zip|max:102400',
-            'live_preview.*' => 'nullable|mimes:zip|max:102400',
+            // 'inline_preview' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
+            // 'main_files.*' => 'required|mimes:zip|max:102400',
+            // 'preview.*' => 'required|mimes:zip|max:102400',
+            // 'live_preview.*' => 'nullable|mimes:zip|max:102400',
             'status' => 'required|in:approved,pending',
         ]);
 
@@ -205,16 +210,31 @@ class AdminController extends Controller
         $livePreviewPaths = [];
 
         // $thumbnailPath = $request->hasFile('thumbnail') ? $request->file('thumbnail')->store('uploads/thumbnails', 'public') : null;
+
+
+		$thumbnailPath = null;
+		$thumbnailName = null;
 		
-		if ($request->hasFile('thumbnail')) {
-			$file = $request->file('thumbnail'); 
-			$thumbnailName = $file->getClientOriginalName();
-			$thumbnailPath = $file->storeAs('uploads/thumbnails', $thumbnailName, 'public');
-		} else {
-			$thumbnailPath = null;
+        if ($request->hasFile('thumbnail')) {
+			$thumbnailName = time() . '---' . $request->file('thumbnail')->getClientOriginalName();
+			$image = $request->file('thumbnail');
+			$image->move(public_path('storage/uploads/thumbnails'), $thumbnailName);
+			$thumbnailPath = 'storage/uploads/thumbnails/' . $thumbnailName;
 		}
+
 		
-        $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
+        // $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
+
+        if ($request->hasFile('inline_preview')) {
+			$inlinePreviewName = time() . '---' . $request->file('inline_preview')->getClientOriginalName();
+			$inlineFile = $request->file('inline_preview');
+			$inlineFile->move(public_path('storage/uploads/inline_previews'), $inlinePreviewName);
+			$inlinePreviewPath = 'storage/uploads/inline_previews/' . $inlinePreviewName;
+		} else {
+			$inlinePreviewPath = null;
+			$inlinePreviewName = null;
+		}
+
 
         if ($request->hasFile('main_files')) {
             foreach ($request->file('main_files') as $file) {
@@ -250,18 +270,20 @@ class AdminController extends Controller
         }
 
         try {
-            Product::create([                
+            Product::create([
                 'user_id' => Auth::id(),
                 'name' => $request->name,
                 'description' => $request->description,
                 'category_id' => $request->category_id,
                 'regular_license_price' => $request->regular_license_price,
                 'extended_license_price' => $request->extended_license_price,
-                'thumbnail' => $thumbnailPath,
-                'inline_preview' => $inlinePreviewPath,
+
+                'thumbnail' => $thumbnailName,
+                'inline_preview' => $inlinePreviewName,
                 'main_files' => json_encode($mainFilePaths),
                 'preview' => json_encode($previewPaths),
                 'live_preview' => json_encode($livePreviewPaths),
+
                 'status' => $request->status,
             ]);
         } catch (\Exception $e) {
@@ -486,7 +508,7 @@ class AdminController extends Controller
 
         return redirect()->route('admin.viewproduct')->with('success', 'Product deleted successfully!');
     }
-	
+
 	public function messagePage($id)
 	{
 		$user = User::find($id);
@@ -497,7 +519,7 @@ class AdminController extends Controller
 
 		return view('admin.messages', compact('user'));
 	}
-	
+
 	public function messageSave(Request $request,$id)
 	{
 		$request->validate([
@@ -507,28 +529,28 @@ class AdminController extends Controller
 		$message = Messages::create([
 			'sender_id'   => auth()->id(),
 			'receiver_id' => $id,
-			'message'     => $request->message_content,	
+			'message'     => $request->message_content,
 			'sent_at'     => now(),
 		]);
-		
+
 		/* $url = route('user.messagePage');
-		
+
 		$notification = Notifications::create([
 			'sender_id'   => auth()->id(),
-			'receiver_id' => $id, 
+			'receiver_id' => $id,
 			'content'     => 'New message from: ' . auth()->user()->name,
 			'url'         => $url,
 			'sent_at'     => now(),
 		]); */
-		
+
 		event(new MessageSent($message));
-		
+
 		return response()->json([
 			'success' => true,
 			'message' => 'Message and notification saved successfully'
 		]);
 	}
-	
+
 	public function fetchMessages(Request $request, $id)
 	{
 		$authId = auth()->id();
@@ -548,13 +570,13 @@ class AdminController extends Controller
 			'messages' => $messages
 		]);
 	}
-	
+
 	public function adminProfile()
 	{
 		$user = User::find(auth()->id());
 		return view('admin.profile', compact('user'));
 	}
-	
+
 	public function updateProfile(Request $request)
 	{
 		$user = auth()->user();
@@ -590,26 +612,26 @@ class AdminController extends Controller
 			'message' => 'Profile updated successfully.'
 		]);
 	}
-	
+
 	public function fetchNotifications()
 	{
 		$notifications = Notifications::where('receiver_id', auth()->id())->orderBy('created_at', 'desc')->take(5)->get();
 
 		return response()->json(['notifications' => $notifications]);
 	}
-	
+
 	public function allNotificationPage()
 	{
 		return view('admin.notifications');
 	}
-	
+
 	public function fetchAllNotifications()
 	{
 		$allNotifications = Notifications::where('receiver_id', auth()->id())->orderBy('created_at', 'desc')->get();
-		
+
 		return response()->json(['allNotifications' => $allNotifications]);
 	}
-	
+
 	public function markReadAsNotifications()
 	{
 		$notifications = Notifications::where('receiver_id', auth()->id())->whereNull('read_at')->get();
@@ -639,7 +661,7 @@ class AdminController extends Controller
 		foreach ($communities as $item) {
 			$data_arr[] = [
 				'id' => '<span class="text-xs fw-bold">' . $item->id . '</span>',
-				'complaint' => '<span class="text-xs fw-bold text-dark">' . htmlspecialchars($item->complaint) . '</span>',
+				'complaint' => '<span class="text-xs fw-bold text-muted">' . htmlspecialchars($item->complaint) . '</span>',
 				'comment' => '<span class="text-xs text-muted">' . nl2br(e($item->comment)) . '</span>',
 				'user' => '<span class="text-xs fw-bold text-primary">' . ($item->user?->name ?? 'Unknown') . '</span>',
 				'created_at_human' => '<span class="text-xs text-secondary">' . $item->created_at->diffForHumans() . '</span>',
@@ -657,7 +679,7 @@ class AdminController extends Controller
 		$community = Community::with('user')->findOrFail($id);
 		return view('admin.community-reply', compact('community'));
 	}
-	
+
 	public function replyCommunity(Request $request, $id)
 	{
 		$request->validate([
@@ -667,12 +689,144 @@ class AdminController extends Controller
 		$community = Community::findOrFail($id);
 		$community->admin_reply = $request->admin_reply;
 		$community->save();
-		
+
 		event(new CommunityCreated($community));
 
 		return response()->json([
 			'message' => 'Reply saved successfully.'
 		]);
 	}
+
+    public function ordersPage(){
+        return view('admin.orders.orders_list');
+    }
+
+    public function fetchOrders()
+    {
+        $orders = Order::with(['user', 'items.product'])->latest()->get();
+
+        $data = $orders->map(function ($order) {
+            $productNames = $order->items->map(function ($item) {
+                return $item->product->name ?? 'N/A';
+            })->implode(', '); 
+
+            return [
+                'order_id' => $order->id,
+                'user_name' => $order->user->name ?? 'N/A',
+                'product_names' => $productNames,
+                'total' => '$ ' . number_format($order->total, 2),
+                'status' => ucfirst($order->payment_status),
+                'created_at_human' => $order->created_at->diffForHumans(),
+                'actions' => '<a href="' . route('admin.singleOrderDetails', $order->id) . '" class="btn btn-sm btn-primary">View</a>',
+            ];
+        });
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function singleOrderDetails(Order $order)
+    {
+        $order->load(['user', 'items.product']);
+
+        return view('admin.orders.single_order', compact('order'));
+    }
+
+    public function whislistPage(){
+        return view('admin.whislists.whislist_list');
+    }
+
+    public function fetchWishlist()
+    {
+        $wishlists = Whislist::with(['user', 'product'])->latest()->get();
+
+        $data = $wishlists->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'user_name' => $item->user->name ?? '',
+                'product_name' => $item->product->name ?? '',
+                'created_at_human' => $item->created_at->diffForHumans(),
+                'actions' => '<a href="' . route('admin.showWishlistDetails', $item->id) . '" class="btn btn-sm btn-primary">View</a>',
+            ];
+        });
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function showWishlistDetails($id)
+    {
+        $wishlist = Whislist::with(['user', 'product.category'])->findOrFail($id);
+
+        return view('admin.whislists.whislist_details', compact('wishlist'));
+    }
+
+    public function couponAddPage(){
+        return view('admin.coupons.add');
+    }
+
+    public function storeCoupon(Request $request){
+
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|string|unique:coupons,code|max:50',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'discount_percentage' => 'nullable|integer|min:1|max:100',
+            'minimum_order_amount' => 'required|numeric|min:0',
+            'usage_limit' => 'required|integer|min:1',
+            'expires_at' => 'required|date|after:today',
+            'active' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $coupon = Coupons::create([
+            'code' => strtoupper($request->code),
+            'discount_amount' => $request->discount_amount,
+            'discount_percentage' => $request->discount_percentage,
+            'minimum_order_amount' => $request->minimum_order_amount,
+            'usage_limit' => $request->usage_limit,
+            'expires_at' => $request->expires_at,
+            'status' => $request->active,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Coupon created successfully!',
+            'data' => $coupon
+        ]);
+    }
+
+    public function couponsPage(){
+        return view('admin.coupons.list');
+    }
+
+
+    public function fetchCoupons()
+    {
+        $coupons = Coupons::latest()->get();
+
+        $data = $coupons->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'code' => $item->code,
+                'discount_amount' => $item->discount_amount ? '$' . $item->discount_amount : '-',
+                'discount_percentage' => $item->discount_percentage . '%',
+                'minimum_order_amount' => '$' . $item->minimum_order_amount,
+                'usage_limit' => $item->usage_limit,
+                'expires_at' => $item->expires_at 
+                    ? $item->expires_at->format('d-m-Y H:i') 
+                    : 'No expiry',
+                'status' => $item->status,
+                'created_at' => $item->created_at->diffForHumans(),
+                'actions' => '<a href="#" class="btn btn-sm btn-primary">View</a>',
+            ];
+        });
+
+        return response()->json(['data' => $data]);
+    }
 
 }

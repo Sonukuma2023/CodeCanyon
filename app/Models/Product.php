@@ -42,4 +42,15 @@ class Product extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function wishlistedBy()
+	{
+		return $this->belongsToMany(User::class, 'wishlists', 'product_id', 'user_id')->withTimestamps();;
+	}
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+
 }

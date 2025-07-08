@@ -5,22 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Community extends Model
+class Whislist extends Model
 {
-    use HasFactory;
-
-    protected $table = "community";
-
+   use HasFactory;
+	
+	protected $table= "wishlists";
+	
 	protected $fillable = [
 		'user_id',
-		'complaint',
-		'comment',
-		'admin_reply',
-		'developer_reply',
+		'product_id'
 	];
-
+	
 	public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
     }
 }
