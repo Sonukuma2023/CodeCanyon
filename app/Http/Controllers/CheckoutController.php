@@ -6,11 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Cart;
+use App\Models\UserCoupons;
+use App\Models\Coupons;
 use Illuminate\Support\Facades\Auth;
 use Stripe\Stripe;
 use Stripe\Charge;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class CheckoutController extends Controller
 {
@@ -99,6 +102,28 @@ class CheckoutController extends Controller
                     ]);
                 }
 
+                $couponId = Session::get('applied_coupon_id');
+                if ($couponId) {
+                    $coupon = Coupons::find($couponId);
+                    if ($coupon) {
+                        if (!is_null($coupon->usage_limit) && $coupon->usage_limit > 0) {
+                            $coupon->decrement('usage_limit');
+
+                            if ($coupon->usage_limit <= 1) {
+                                $coupon->status = 'expired';
+                                $coupon->save();
+                            }
+                        }
+
+                        UserCoupons::create([
+                            'user_id'  => Auth::id(),
+                            'coupon_id' => $coupon->id,
+                            'order_id' => $order->id,
+                        ]);
+                    }
+                    
+                }
+
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -108,6 +133,10 @@ class CheckoutController extends Controller
                 // \Stripe\Refund::create(['charge' => $stripeTransactionId]);
 
                 return back()->with('error', 'Order creation failed; your payment has been refunded.');
+            }
+
+            if (Session::has('applied_coupon_id')) {
+                Session::forget('applied_coupon_id');
             }
 
             // 6) Clear cart and redirect with order ID in URL

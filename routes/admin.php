@@ -52,7 +52,28 @@ Route::middleware(['auth', 'role:admin'])
 		Route::get('/reply/community/{id}',[AdminController::class, 'replyCommunityForm'])->name('replyCommunityForm');
 		Route::post('/reply/community/{id}',[AdminController::class, 'replyCommunity'])->name('replyCommunity');
 
+
+        Route::prefix('order')->group(function () {
+            Route::get('/list', [AdminController::class, 'ordersPage'])->name('ordersPage');
+            Route::get('/fetch', [AdminController::class, 'fetchOrders'])->name('fetchOrders');
+            Route::get('/details/{order}', [AdminController::class, 'singleOrderDetails'])->name('singleOrderDetails');
+        });
+
+        Route::prefix('user/whislist')->group(function () {
+            Route::get('/list', [AdminController::class, 'whislistPage'])->name('whislistPage');
+            Route::get('/ajax/list', [AdminController::class, 'fetchWishlist'])->name('fetchWishlist');
+            Route::get('/details/{id}', [AdminController::class, 'showWishlistDetails'])->name('showWishlistDetails');
+        });
+
+        Route::prefix('coupons')->group(function () {
+            Route::get('/add', [AdminController::class, 'couponAddPage'])->name('couponAddPage');
+            Route::post('/add', [AdminController::class, 'storeCoupon'])->name('storeCoupon');
+            Route::get('/ajax/list', [AdminController::class, 'fetchCoupons'])->name('fetchCoupons');
+            Route::get('/list', [AdminController::class, 'couponsPage'])->name('couponsPage');
+        });
+
         // Route::get('single/{name}/{slug}', [AdminController::class, 'single_categories_details'])->name('single.category');
+
 
 
 

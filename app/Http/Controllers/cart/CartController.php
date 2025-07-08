@@ -90,7 +90,7 @@ class CartController extends Controller
         if ($item && $item->user_id == auth()->id()) {
             $item->delete();
 
-            $cartCount = Cart::where('user_id', auth()->id())->sum('quantity');
+            $cartCount = Cart::where('user_id', auth()->id())->count();
 
             return response()->json(['success' => true, 'message' => 'Item removed from cart', 'cartCount' => $cartCount, 'summary' => $this->getCartSummary()]);
         }
@@ -151,7 +151,7 @@ class CartController extends Controller
         $total = $subtotal - $discount + $tax;
 
         return [
-            'totalItems' => $cartItems->sum('quantity'),
+            'totalItems' => $cartItems->count(),
             'subtotal' => number_format($subtotal, 2),
             'discount' => number_format($discount, 2),
             'tax' => number_format($tax, 2),
@@ -274,7 +274,7 @@ class CartController extends Controller
             ]);
         }
 
-        $cartCount = Cart::where('user_id', $userId)->sum('quantity');
+        $cartCount = Cart::where('user_id', $userId)->count();
 
         return response()->json([
             'success' => true,
@@ -287,11 +287,11 @@ class CartController extends Controller
     public function userCartCount() 
 	{
 		$user = auth()->user();
-		$cartCount = 0;
+        $cartCount = 0;
 
-		if ($user) {
-			$cartCount = Cart::where('user_id', $user->id)->sum('quantity');
-		}
+        if ($user) {
+            $cartCount = Cart::where('user_id', $user->id)->count();
+        }
 
 		return response()->json(['cartCount' => $cartCount]);
 	}

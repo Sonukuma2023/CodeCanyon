@@ -88,12 +88,38 @@
         </li>
 
         <li class="nav-item menu-items">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="{{ route('admin.ordersPage') }}">
                 <span class="menu-icon">
                 <i class="mdi mdi-speedometer"></i>
                 </span>
                 <span class="menu-title">Orders</span>
             </a>
+        </li>
+
+        <li class="nav-item menu-items">
+            <a class="nav-link" href="{{ route('admin.whislistPage') }}">
+                <span class="menu-icon">
+                    <i class="mdi mdi-heart-outline"></i>
+                </span>
+                <span class="menu-title">Wishlist</span>
+            </a>
+        </li>
+
+
+        <li class="nav-item menu-items">
+            <a class="nav-link" data-toggle="collapse" href="#ui-coupons" aria-expanded="false" aria-controls="ui-basic">
+                <span class="menu-icon">
+                <i class="mdi mdi-bullhorn"></i>
+                </span>
+                <span class="menu-title">Coupons</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="ui-coupons">
+                <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="{{ route('admin.couponAddPage') }}">Add Coupons</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{ route('admin.couponsPage') }}">View All</a></li>
+                </ul>
+            </div>
         </li>
 
         <li class="nav-item menu-items">

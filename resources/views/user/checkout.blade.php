@@ -154,6 +154,12 @@
                         <span>${{ number_format($total, 2) }}</span>
                     </div>
 
+                    <div class="input-group mb-4">
+                        <input type="text" name="coupon_code" id="coupon_code_input" class="form-control" placeholder="Coupon code (optional)">
+                        <button type="button" class="btn btn-primary" onclick="applyCoupon()">Apply</button>
+                    </div>
+
+
                     <button type="submit" class="btn btn-primary w-100 mt-3">Complete Order</button>
 
                     <div class="text-center mt-3 text-muted small">
@@ -168,4 +174,45 @@
 </div>
 
 
+@endsection
+
+@section('scripts')
+<script>
+function applyCoupon() {
+    const couponCode = document.getElementById('coupon_code_input').value;
+
+    if (!couponCode.trim()) {
+        Swal.fire('Error', 'Please enter a coupon code.', 'warning');
+        return;
+    }
+
+    $.ajax({
+        url: '{{ route('user.applyCoupon') }}',
+        method: 'POST',
+        data: {
+            coupon_code: couponCode,
+            _token: '{{ csrf_token() }}'
+        },
+        success: function (response) {
+            if (response.success) {
+                Swal.fire('Success', response.message, 'success');
+                updateCartSummary(response.summary);
+            } else {
+                Swal.fire('Invalid', response.message, 'warning');
+            }
+        },
+        error: function (xhr) {
+            console.error(xhr.responseText);
+            Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+        }
+    });
+}
+
+function updateCartSummary(summary) {
+    $('span:contains("Subtotal")').next().text(`$${summary.subtotal}`);
+    $('span:contains("Discount")').next().text(`- $${summary.discount}`);
+    $('span:contains("Tax")').next().text(`$${summary.tax}`);
+    $('span:contains("Total")').next().text(`$${summary.total}`);
+}
+</script>
 @endsection
