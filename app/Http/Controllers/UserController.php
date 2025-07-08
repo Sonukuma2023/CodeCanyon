@@ -250,45 +250,54 @@ class UserController extends Controller
 	}
 
 
-	public function showCategoryProducts($slug)
-	{
-		$categories = Category::latest()->get();
-        $products = Product::with('category')->latest()->get();
-        // view()->share('categories', $categories);
-        $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-
-		$category = Category::where('name', $slug)->firstOrFail();
-		$products = $category->products()->latest()->get();
-
-		return view('user.category-products', compact('category', 'products', 'categories', 'products', 'navbarCategories'));
-	}
-
 	// public function showCategoryProducts($slug)
-
 	// {
-
 	// 	$categories = Category::latest()->get();
-	// 	$navbarCategories = Category::orderBy('created_at', 'asc')->get();
+    //     $products = Product::with('category')->latest()->get();
+    //     // view()->share('categories', $categories);
+    //     $navbarCategories = Category::orderBy('created_at', 'asc')->get();
 
 	// 	$category = Category::where('name', $slug)->firstOrFail();
+	// 	$products = $category->products()->latest()->get();
 
-	// 	$products = $category->products()->with('wishlistedBy')->latest()->get();
-
-	// 	if (auth()->check()) {
-	// 		$userWishlist = auth()->user()->wishlist->pluck('id')->toArray();
-
-	// 		$products->each(function ($product) use ($userWishlist) {
-	// 			$product->is_wishlisted = in_array($product->id, $userWishlist);
-	// 		});
-	// 	} else {
-	// 		$products->each(function ($product) {
-	// 			$product->is_wishlisted = false;
-	// 		});
-	// 	}
-
-	// 	return view('user.category-products', compact('category', 'products', 'categories', 'navbarCategories'));
+	// 	return view('user.category-products', compact('category', 'products', 'categories', 'products', 'navbarCategories'));
 	// }
 
+	public function showCategoryProducts($slug, Request $request)
+	{
+		$category = Category::where('name', $slug)->firstOrFail();
+		$categories = Category::latest()->get();
+		$navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+		$query = $category->products()->with(['category', 'wishlistedBy'])->latest();
+
+		if ($request->filled('min_price')) {
+			$query->where('regular_license_price', '>=', $request->min_price);
+		}
+
+		if ($request->filled('max_price')) {
+			$query->where('regular_license_price', '<=', $request->max_price);
+		}
+
+		if ($request->filled('rating')) {
+			$query->where('rating', '>=', $request->rating);
+		}
+
+		$products = $query->get();
+
+		// Mark each product as wishlisted
+		$products->each(function ($product) {
+			$product->is_wishlisted = auth()->check() && $product->wishlistedBy->contains(auth()->id());
+		});
+
+		if ($request->ajax()) {
+			$html = view('user.product-cards', compact('products'))->render();
+			return response()->json(['html' => $html]);
+		}
+
+		return view('user.category-products', compact('category', 'products', 'categories', 'navbarCategories'));
+	}
+	
 
 	public function addWhislist(Request $request)
 	{
@@ -374,8 +383,6 @@ class UserController extends Controller
 
 		$tax = $subtotal * 0.1;
 		$total = ($subtotal + $tax) - $discount;
-
-		Session::put('applied_coupon_id', $coupon->id);
 
 		return response()->json([
 			'success' => true,

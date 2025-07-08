@@ -244,7 +244,7 @@
                     @if($product->status != 'pending')
                         <div class="product-card">
                             <div class="product-image">
-                                <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}" loading="lazy">
+                                <img src="{{ asset('storage/uploads/thumbnails/' . $product->thumbnail) }}" alt="{{ $product->name }}" loading="lazy">
                                 <a href="{{ route('user.singleproduct', $product->id) }}" class="quick-view" data-product-id="{{ $product->id }}">Quick View</a>
                             </div>
 

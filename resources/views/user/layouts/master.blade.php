@@ -26,7 +26,7 @@
 
         <div class="main-panel">
             <div class="content-wrapper">
-
+                @include('layouts.loader');
                 @yield('content')
 
             </div>
@@ -156,7 +156,8 @@
 
                 const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
                 if (paymentMethod !== 'card') {
-                    form.submit();
+                    // form.submit();
+                    submitViaAjax();
                     return;
                 }
 
@@ -174,7 +175,8 @@
                         hiddenInput.setAttribute('name', 'stripe_token');
                         hiddenInput.setAttribute('value', result.token.id);
                         form.appendChild(hiddenInput);
-                        form.submit();
+                        // form.submit();
+                        submitViaAjax();
                     }
                 });
             });
