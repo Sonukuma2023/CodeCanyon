@@ -12,7 +12,7 @@
                     $previewFiles = json_decode($product->preview, true) ?? [];
                     $livePreviewFiles = json_decode($product->live_preview, true) ?? [];
 
-                    $thumbnail = $product->thumbnail ? asset('storage/uploads/thumbnails/' . $product->thumbnail) : asset('default-thumbnail.jpg');
+                    $thumbnail = $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('default-thumbnail.jpg');
                     $inlinePreview = $product->inline_preview ? asset('storage/' . $product->inline_preview) : '#';
                     $salesCount = $product->sales ?? rand(10, 200);
                     $rating = $product->rating ?? 4.5;
@@ -25,7 +25,7 @@
 							<i class="bi bi-heart{{ $product->is_wishlisted ? '-fill text-danger' : '' }}"></i>
 						</button>
 					</div>
-	
+
 						<img src="{{ $thumbnail }}" class="card-img-top" style="height: 160px; object-fit: cover;" alt="{{ $product->name }} thumbnail">
 
                         <div class="card-body d-flex flex-column">
@@ -158,7 +158,7 @@
                     }
                 },
                 error: function (xhr) {
-                    console.log(xhr); 
+                    console.log(xhr);
                 }
             });
         });
