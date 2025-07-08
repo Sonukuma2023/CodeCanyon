@@ -19,6 +19,7 @@ class CheckoutController extends Controller
 {
     public function processCheckout(Request $request)
     {
+        dd($request);
         $cartItems = Cart::with('product')->where('user_id', auth()->id())->get();
 
         if ($cartItems->isEmpty()) {
@@ -39,6 +40,8 @@ class CheckoutController extends Controller
             'country'        => 'required|string',
             'payment_method' => 'required|in:card,cod',
             'stripe_token'   => 'required_if:payment_method,card',
+            'final_total'        => 'required|numeric|min:0',
+            'applied_coupon_code'=> 'required_if:is_coupon_applied,1|string|exists:coupons,code',
         ]);
 
         // 3) Calculate order totals
@@ -48,6 +51,13 @@ class CheckoutController extends Controller
 
         $discount = 0;
         $tax = round($subtotal * 0.18, 2);
+
+        $frontendTotal = (float) $request->input('final_total');
+        $couponCode = $request->input('applied_coupon_code');
+
+        $discount = 0;
+        $coupon = null;
+
         $total = $subtotal - $discount + $tax;
 
         if ($validatedData['payment_method'] === 'card') {
@@ -109,10 +119,11 @@ class CheckoutController extends Controller
                         if (!is_null($coupon->usage_limit) && $coupon->usage_limit > 0) {
                             $coupon->decrement('usage_limit');
 
-                            if ($coupon->usage_limit <= 1) {
+                            if ($coupon->usage_limit <= 0) {
                                 $coupon->status = 'expired';
-                                $coupon->save();
                             }
+
+                            $coupon->save();
                         }
 
                         UserCoupons::create([

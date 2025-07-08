@@ -43,10 +43,10 @@ Route::middleware(['auth', 'role:admin'])
             Auth::logout();
             return redirect('/login');
         })->name('logout');
-		
+
 		Route::get('/profile',[AdminController::class, 'adminProfile'])->name('profile');
 		Route::post('/profile',[AdminController::class, 'updateProfile'])->name('updateProfile');
-		
+
 		Route::get('/view/communities',[AdminController::class, 'viewCommunities'])->name('viewCommunities');
 		Route::get('/fetch/communities',[AdminController::class, 'fetchCommunities'])->name('fetchCommunities');
 		Route::get('/reply/community/{id}',[AdminController::class, 'replyCommunityForm'])->name('replyCommunityForm');
@@ -70,5 +70,7 @@ Route::middleware(['auth', 'role:admin'])
             Route::get('/ajax/list', [AdminController::class, 'fetchCoupons'])->name('fetchCoupons');
             Route::get('/list', [AdminController::class, 'couponsPage'])->name('couponsPage');
         });
+
+        // Route::get('single/{name}/{slug}', [AdminController::class, 'single_categories_details'])->name('single.category');
 
     });

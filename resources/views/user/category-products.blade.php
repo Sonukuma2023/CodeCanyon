@@ -32,8 +32,11 @@
                     $previewFiles = json_decode($product->preview, true) ?? [];
                     $livePreviewFiles = json_decode($product->live_preview, true) ?? [];
 
+
                     $thumbnail = $product->thumbnail ? asset('storage/uploads/thumbnails/' . $product->thumbnail) : asset('default-thumbnail.jpg');
                     $inlinePreview = $product->inline_preview ? asset('storage/uploads/inline_previews/' . $product->inline_preview) : '#';
+
+
                     $salesCount = $product->sales ?? rand(10, 200);
                     $rating = $product->rating ?? 4.5;
                 @endphp
@@ -46,7 +49,9 @@
 						</button>
 					</div>
 
+
                     <a href="{{ route('user.singleDetailsCategory', $product->id) }}" class="text-decoration-none text-dark">
+
 						<img src="{{ $thumbnail }}" class="card-img-top" style="height: 160px; object-fit: cover;" alt="{{ $product->name }} thumbnail">
 
                         <div class="card-body d-flex flex-column">
@@ -160,49 +165,49 @@
 			});
 		});
 
-
         $(document).on('click', '.add-to-cart', function (e) {
-        e.preventDefault();
+            e.preventDefault();
 
-        const button = $(this);
-        const productId = button.data('id');
-        const quantity = 1;
-        const price = button.data('price');
+            const button = $(this);
+            const productId = button.data('id');
+            const quantity = 1;
+            const price = button.data('price');
 
-        $.ajax({
-            url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
-            type: "POST",
-            data: {
-                _token: "{{ csrf_token() }}",
-                quantity: quantity,
-                price: price
-            },
-            beforeSend: function () {
-                button.prop('disabled', true);
-            },
-            success: function (response) {
-                if (response.success) {
-                    $('.cart-count').text(response.cartCount);
+            $.ajax({
+                url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
+                type: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    quantity: quantity,
+                    price: price
+                },
+                beforeSend: function () {
+                    button.prop('disabled', true);
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $('.cart-count').text(response.cartCount);
 
-                    // Animate feedback
-                    button.addClass('cart-animate');
-                    button.find('.cart-icon').addClass('d-none');
-                    button.find('.cart-added').removeClass('d-none');
+                        // Animate feedback
+                        button.addClass('cart-animate');
+                        button.find('.cart-icon').addClass('d-none');
+                        button.find('.cart-added').removeClass('d-none');
 
-                    setTimeout(() => {
-                        button.removeClass('cart-animate');
-                        button.find('.cart-added').addClass('d-none');
-                        button.find('.cart-icon').removeClass('d-none');
-                        button.prop('disabled', false);
-                    }, 1500);
+                        setTimeout(() => {
+                            button.removeClass('cart-animate');
+                            button.find('.cart-added').addClass('d-none');
+                            button.find('.cart-icon').removeClass('d-none');
+                            button.prop('disabled', false);
+                        }, 1500);
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                    button.prop('disabled', false);
                 }
-            },
-            error: function (xhr) {
-                console.log(xhr);
-                button.prop('disabled', false);
-            }
+            });
         });
-    });
+
 
     });
 </script>

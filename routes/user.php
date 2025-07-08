@@ -6,6 +6,8 @@ use App\Http\Controllers\cart\CartController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\SearchController;
+
 
 Route::middleware(['auth', 'role:user'])
     ->name('user.')
@@ -21,7 +23,7 @@ Route::middleware(['auth', 'role:user'])
             Auth::logout();
             return redirect('/');
         })->name('logout');
-		
+
     });
 
     Route::get('/profile/edit', [UserController::class, 'edit'])->name('profile.edit');
@@ -41,19 +43,19 @@ Route::middleware(['auth', 'role:user'])
         Route::get('/orders', [OrderController::class, 'index']) ->name('user.orders')->middleware('auth');
         Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
         Route::get('/orders', [OrderController::class, 'index'])->name('orders');
-		
+
 		Route::get('/chat-with-admin', [UserController::class, 'messagePage'])->name('user.messagePage');
 		Route::get('/fetch/messages', [UserController::class, 'fetchMessages'])->name('user.fetchMessages');
 		Route::post('/save/chat', [UserController::class, 'messageSave'])->name('user.messageSave');
 		Route::post('/mark/asread', [UserController::class, 'markMessagesAsRead'])->name('user.markMessagesAsRead');
-		
+
 		Route::get('/script/runner', [UserController::class, 'scriptRunnerPage'])->name('user.scriptRunnerPage');
 		Route::post('/script/runner', [UserController::class, 'runScript'])->name('user.runScript');
 		Route::get('/community/page', [UserController::class, 'communityPage'])->name('user.communityPage');
 		Route::post('/create/community', [UserController::class, 'createCommunity'])->name('user.createCommunity');
 		Route::get('/community/list', [UserController::class, 'communityList'])->name('user.communityList');
 		Route::get('/fetch/community/list', [UserController::class, 'fetchCommunityList'])->name('user.fetchCommunityList');
-		
+
 		Route::get('/category/products/{slug}', [UserController::class, 'showCategoryProducts'])->name('user.showCategoryProducts');
 		Route::post('/add/whislist', [UserController::class, 'addWhislist'])->name('user.addWhislist');
         Route::get('/category/details/{id}', [UserController::class, 'singleDetailsCategory'])->name('user.singleDetailsCategory');
@@ -64,3 +66,7 @@ Route::middleware(['auth', 'role:user'])
         Route::post('/apply/coupon', [UserController::class, 'applyCoupon'])->name('user.applyCoupon');
 		
     });
+        // Route::post('/search-items', [SearchController::class, 'search'])->name('search.items');
+        Route::post('/search-items', [SearchController::class, 'search'])->name('search.items');
+        Route::get('/filter-products', [SearchController::class, 'filterProducts'])->name('filter.products');
+

@@ -48,7 +48,7 @@
     .chat-input textarea {
         resize: none;
     }
-	
+
 	@media (max-width: 576px) {
     #supportChatModal {
         right: 10px;
@@ -140,11 +140,11 @@
                     <img src="{{ asset('frontend/images/5.jpg') }}" alt="Thumbnail" style="width: 80%;mix-blend-mode: multiply;">
                 </div>
             </div>
-            
+
         </div>
     </section>
-	
-	
+
+
 	<!-- Custom Tools Section -->
 	<section class="tools-section bg-white">
 		<div class="container">
@@ -220,7 +220,7 @@
                         <h3>{{ $category->name }}</h3>
                         <p class="item-count">420+ Templates</p>
                     </a>
-                @endforeach                
+                @endforeach
             </div>
         </div>
     </section>
@@ -234,7 +234,7 @@
                 <h2 class="section-title">2025's Best Selling Scripts</h2>
                 <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
             </div>
-            
+
             <div class="products-grid">
                 @foreach ($products as $product)
                     @if($product->status != 'pending')
@@ -243,11 +243,11 @@
                                 <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}" loading="lazy">
                                 <a href="{{ route('user.singleproduct', $product->id) }}" class="quick-view" data-product-id="{{ $product->id }}">Quick View</a>
                             </div>
-                            
+
                             <div class="product-details">
                                 <h3 class="product-title">{{ $product->name }}</h3>
                                 <div class="product-author">by <a href="#">{{ $product->name }}</a></div>
-                                
+
                                 <div class="product-meta">
                                     <div class="rating">
                                         <div class="stars">
@@ -262,7 +262,7 @@
                                         <i class="fas fa-chart-line"></i> 1200+ sales
                                     </div>
                                 </div>
-                                
+
                                 <div class="product-footer">
                                     <!-- Product price -->
                                     <div class="price">${{ number_format($product->regular_license_price, 2) }}</div>
@@ -284,7 +284,7 @@
 
         </div>
     </section>
-	
+
 	@auth
 		<!-- Floating Chat Button -->
 		<div id="chatToggleBtn" style="position: fixed; bottom: 30px; right: 30px; z-index: 9999;">
@@ -318,7 +318,7 @@
 				</form>
 			</div>
 		</div>
-		
+
 		@endauth
 
     <!-- Call to Action -->
@@ -347,12 +347,12 @@ $(document).ready(function () {
 		}
 	});
 
-	
+
     function convertUtcToLocal(utcDateTime) {
         const utcDate = new Date(utcDateTime + ' UTC');
         return moment(utcDate).fromNow();
     }
-	
+
 	function markMessagesAsRead() {
 		$.ajax({
 			url: "{{ route('user.markMessagesAsRead') }}",
@@ -370,12 +370,12 @@ $(document).ready(function () {
         $.get("{{ route('user.fetchMessages') }}", function (res) {
             $('#messages-container').html('');
 			let unreadCount = 0;
-			
+
             res.messages.forEach(function (msg) {
                 const isUser = msg.sender_id === {{ auth()->id() }};
                 const cls = isUser ? 'you' : 'other';
                 const time = convertUtcToLocal(msg.sent_at);
-				
+
 				if (!isUser && msg.read_at === null) {
 					unreadCount++;
 				}
@@ -389,7 +389,7 @@ $(document).ready(function () {
                 `);
             });
             $('#chatBox').scrollTop($('#chatBox')[0].scrollHeight);
-			
+
 			const badge = $('#unreadCountBadge');
 			const modal = $('#supportChatModal');
 
@@ -429,7 +429,7 @@ $(document).ready(function () {
             fetchMessages();
         });
     });
-	
+
 	$('#chatToggleBtn').on('click', function () {
 		const modal = $('#supportChatModal');
 
