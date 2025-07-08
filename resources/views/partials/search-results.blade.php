@@ -86,7 +86,7 @@
                             <input type="number" name="min_price" id ="min_price" class="form-control" placeholder="Min">
                             <input type="number" name="max_price" id ="max_price" class="form-control" placeholder="Max">
                             {{-- <h5 class="card-title">{{ $product->name }}</h5> --}}
-                            <input type="text" name ="product_name" id= "product_name" value="{{$query}}">
+                            <input type="hidden" name ="product_name" id= "product_name" value="{{$query}}">
                             <span><button type="submit" class="btn btn-primary w-100">></button></span>
                         </div>
                     </div>

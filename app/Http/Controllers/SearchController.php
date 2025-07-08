@@ -62,27 +62,56 @@ class SearchController extends Controller
 }
 
 
+// public function filterProducts(Request $request)
+// {
+
+
+//     $query = Product::query();
+
+//     $product_name = $request->product_name;
+
+
+//     if ($request->filled('min_price')) {
+//         $query->where('regular_license_price', '>=', $request->min_price);
+//     }
+
+//     if ($request->filled('max_price')) {
+//         $query->where('regular_license_price', '<=', $request->max_price);
+//     }
+
+//     $products = $query->get();
+
+
+
+//     return response()->json(['products' => $products]);
+
+// }
+
 public function filterProducts(Request $request)
 {
-
-
     $query = Product::query();
 
+    // Filter by product name if provided
+    if ($request->filled('name')) {
+        $query->where('name', 'like', '%' . $request->product_name . '%');
+    }
+
+    // Filter by min price if provided
     if ($request->filled('min_price')) {
         $query->where('regular_license_price', '>=', $request->min_price);
     }
 
+    // Filter by max price if provided
     if ($request->filled('max_price')) {
         $query->where('regular_license_price', '<=', $request->max_price);
     }
 
+    // Fetch matching products
     $products = $query->get();
 
-
-
     return response()->json(['products' => $products]);
-
 }
+
 
 
 

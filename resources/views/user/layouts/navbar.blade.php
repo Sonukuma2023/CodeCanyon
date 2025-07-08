@@ -19,7 +19,7 @@
             {{-- **************************search functuionality ******************************** --}}
             <div class="search-container">
                 <form action="{{ route('search.items') }}" class="search-form" method="get">
-                    @csrf
+
                     <input type="search" name="query" placeholder="Search 50,000+ items..." aria-label="Search" value="{{ old('query', $query ?? '') }}">
 
                     <button type="submit" class="search-btn">
@@ -93,46 +93,7 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    //    $(document).ready(function() {
-    //         $('#search').on('submit', function(e) {
-    //             e.preventDefault();
 
-    //             let query = $('input[name="query"]').val();
-    //             let token = $('input[name="_token"]').val();
-
-    //             $.ajax({
-    //                 url: "{{ route('search.items') }}",
-    //                 method: "POST",
-    //                 data: {
-    //                     _token: token,
-    //                     query: query
-    //                 },
-    //                 success: function(response) {
-    //                     console.log(response);
-
-    //                     let output = '';
-
-    //                     response.forEach(function(item) {
-    //                         output += `
-    //                             <div class="search-item" style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
-    //                                 <img src="/storage/${item.thumbnail}" alt="${item.name}" style="width:100px; height:auto;">
-    //                                 <h4>${item.name}</h4>
-    //                                 <p>${item.description}</p>
-    //                                 <p><strong>Regular Price:</strong> $${item.regular_license_price}</p>
-    //                                 <p><strong>Extended Price:</strong> $${item.extended_license_price}</p>
-    //                             </div>
-    //                         `;
-    //                     });
-
-    //                     $('#search-results').html(output);
-    //                 },
-    //                 error: function(xhr) {
-    //                     console.error('Error:', xhr.responseText);
-    //                     $('#search-results').html('<p style="color:red;">An error occurred while searching.</p>');
-    //                 }
-    //             });
-    //         });
-    //     });
 
     $(document).ready(function() {
         $.ajax({
