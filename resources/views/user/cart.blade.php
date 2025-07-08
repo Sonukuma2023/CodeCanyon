@@ -36,10 +36,10 @@
                                 <h5 class="mb-1">{{ $item->product->name }}</h5>
                                 <p class="h5 text-primary mb-2">${{ number_format($item['price'], 2) }}</p>
 
-                                <button type="button" class="btn btn-sm btn-link text-danger p-0 remove-from-cart"
-                                    data-id="{{ $item->id }}">
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0 remove-from-cart" data-id="{{ $item->id }}">
                                     <i class="fas fa-trash-alt me-1"></i> Remove
                                 </button>
+
                             </div>
                             <div class="col-md-4">
                                 <div class="d-flex align-items-center">
@@ -86,12 +86,6 @@
                             <span class="h5">${{ number_format($total, 2) }}</span>
                         </div>
 
-                        <form action="{{ route('coupon.apply') }}" method="POST" class="input-group mb-4">
-                            @csrf
-                            <input type="text" name="coupon_code" class="form-control" placeholder="Coupon code">
-                            <button type="submit" class="btn btn-primary">Apply</button>
-                        </form>
-
                         <a href="{{ route('checkout') }}" class="btn btn-primary btn-lg w-100 mb-3">
                             <i class="fas fa-lock me-2"></i> Proceed to Checkout
                         </a>
@@ -124,6 +118,7 @@
 
     $(document).on('click', '.remove-from-cart', function (e) {
         e.preventDefault();
+        e.stopPropagation();
 
         const button = $(this);
         const itemId = button.data('id');
@@ -147,6 +142,7 @@
                             button.closest('.row').remove();
                             $('.cart-count').text(response.cartCount);
                             updateCartSummary(response.summary);
+
                             if (response.cartCount == 0) {
                                 $('.cart-content-wrapper').html(`
                                     <div class="text-center py-5">
@@ -172,7 +168,7 @@
         });
     });
 
-       $(document).on('click', '.increase-btn', function () {
+    $(document).on('click', '.increase-btn', function () {
         const button = $(this);
         const itemId = button.data('id');
 
@@ -262,12 +258,6 @@
                         <span class="h5">Total</span>
                         <span class="h5">$${summary.total}</span>
                     </div>
-
-                    <form action="{{ route('coupon.apply') }}" method="POST" class="input-group mb-4">
-                        @csrf
-                        <input type="text" name="coupon_code" class="form-control" placeholder="Coupon code">
-                        <button type="submit" class="btn btn-primary">Apply</button>
-                    </form>
 
                     <a href="{{ route('checkout') }}" class="btn btn-primary btn-lg w-100 mb-3">
                         <i class="fas fa-lock me-2"></i> Proceed to Checkout

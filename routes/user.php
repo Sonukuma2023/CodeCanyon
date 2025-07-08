@@ -58,9 +58,15 @@ Route::middleware(['auth', 'role:user'])
 
 		Route::get('/category/products/{slug}', [UserController::class, 'showCategoryProducts'])->name('user.showCategoryProducts');
 		Route::post('/add/whislist', [UserController::class, 'addWhislist'])->name('user.addWhislist');
+        Route::get('/category/details/{id}', [UserController::class, 'singleDetailsCategory'])->name('user.singleDetailsCategory');
 
         Route::post('save/cart/{id}',[CartController::class,'saveCart'])->name('user.saveCart');
         Route::get('user/cart/count',[CartController::class,'userCartCount'])->name('user.userCartCount');
+
+        Route::post('/apply/coupon', [UserController::class, 'applyCoupon'])->name('user.applyCoupon');
+		
+        Route::post('/apply/coupon', [UserController::class, 'applyCoupon'])->name('user.applyCoupon');
+		
 
         // Route::post('/search-items', [SearchController::class, 'search'])->name('search.items');
         Route::get('/search-items', [SearchController::class, 'search'])->name('search.items');
@@ -69,3 +75,5 @@ Route::middleware(['auth', 'role:user'])
 
 
     });
+
+

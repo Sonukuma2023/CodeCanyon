@@ -6,16 +6,20 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Cart;
+use App\Models\UserCoupons;
+use App\Models\Coupons;
 use Illuminate\Support\Facades\Auth;
 use Stripe\Stripe;
 use Stripe\Charge;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class CheckoutController extends Controller
 {
     public function processCheckout(Request $request)
     {
+        dd($request);
         $cartItems = Cart::with('product')->where('user_id', auth()->id())->get();
 
         if ($cartItems->isEmpty()) {
@@ -36,6 +40,8 @@ class CheckoutController extends Controller
             'country'        => 'required|string',
             'payment_method' => 'required|in:card,cod',
             'stripe_token'   => 'required_if:payment_method,card',
+            'final_total'        => 'required|numeric|min:0',
+            'applied_coupon_code'=> 'required_if:is_coupon_applied,1|string|exists:coupons,code',
         ]);
 
         // 3) Calculate order totals
@@ -45,6 +51,13 @@ class CheckoutController extends Controller
 
         $discount = 0;
         $tax = round($subtotal * 0.18, 2);
+
+        $frontendTotal = (float) $request->input('final_total');
+        $couponCode = $request->input('applied_coupon_code');
+
+        $discount = 0;
+        $coupon = null;
+
         $total = $subtotal - $discount + $tax;
 
         if ($validatedData['payment_method'] === 'card') {
@@ -99,6 +112,29 @@ class CheckoutController extends Controller
                     ]);
                 }
 
+                $couponId = Session::get('applied_coupon_id');
+                if ($couponId) {
+                    $coupon = Coupons::find($couponId);
+                    if ($coupon) {
+                        if (!is_null($coupon->usage_limit) && $coupon->usage_limit > 0) {
+                            $coupon->decrement('usage_limit');
+
+                            if ($coupon->usage_limit <= 0) {
+                                $coupon->status = 'expired';
+                            }
+
+                            $coupon->save();
+                        }
+
+                        UserCoupons::create([
+                            'user_id'  => Auth::id(),
+                            'coupon_id' => $coupon->id,
+                            'order_id' => $order->id,
+                        ]);
+                    }
+                    
+                }
+
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -108,6 +144,10 @@ class CheckoutController extends Controller
                 // \Stripe\Refund::create(['charge' => $stripeTransactionId]);
 
                 return back()->with('error', 'Order creation failed; your payment has been refunded.');
+            }
+
+            if (Session::has('applied_coupon_id')) {
+                Session::forget('applied_coupon_id');
             }
 
             // 6) Clear cart and redirect with order ID in URL
