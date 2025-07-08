@@ -26,7 +26,7 @@
 
         <div class="main-panel">
             <div class="content-wrapper">
-                @include('layouts.loader');
+                @include('layouts.loader')
                 @yield('content')
 
             </div>

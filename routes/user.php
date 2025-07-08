@@ -73,7 +73,9 @@ Route::middleware(['auth', 'role:user'])
         Route::get('/filter-products', [SearchController::class, 'filterProducts'])->name('filter.products');
 
 
-
+        Route::get('/all/products', [SearchController::class, 'allProductPage'])->name('user.allProducts');
+        Route::get('/all/products/data', [SearchController::class, 'allProductFilter'])->name('user.allProductFilter');
+        
     });
 
 

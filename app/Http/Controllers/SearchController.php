@@ -70,8 +70,6 @@ class SearchController extends Controller
 
 public function filterProducts(Request $request)
 {
-
-
     $query = Product::query();
 
     if ($request->filled('min_price')) {
@@ -84,10 +82,40 @@ public function filterProducts(Request $request)
 
     $products = $query->get();
 
-
-
     return response()->json(['products' => $products]);
 
+}
+
+public function allProductPage()
+{
+    //  $categories = Category::latest()->get();
+        $products = Product::with('category')->latest()->get();
+        // view()->share('categories', $categories);
+        $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+    $categories = Category::all();
+    return view('user.all_products', compact('categories','products', 'navbarCategories'));
+}
+
+public function allProductFilter(Request $request)
+{
+    $query = Product::with('category')->latest();
+
+    if ($request->filled('category_id')) {
+        $query->where('category_id', $request->category_id);
+    }
+
+    if ($request->filled('min_price')) {
+        $query->where('regular_license_price', '>=', $request->min_price);
+    }
+
+    if ($request->filled('max_price')) {
+        $query->where('regular_license_price', '<=', $request->max_price);
+    }
+
+    $products = $query->get();
+
+    return view('user.partials.product-list', compact('products'))->render();
 }
 
 
