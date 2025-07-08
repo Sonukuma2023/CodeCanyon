@@ -32,8 +32,10 @@
                     $previewFiles = json_decode($product->preview, true) ?? [];
                     $livePreviewFiles = json_decode($product->live_preview, true) ?? [];
 
+
                     $thumbnail = $product->thumbnail ? asset('storage/uploads/thumbnails/' . $product->thumbnail) : asset('default-thumbnail.jpg');
                     $inlinePreview = $product->inline_preview ? asset('storage/uploads/inline_previews/' . $product->inline_preview) : '#';
+
                     $salesCount = $product->sales ?? rand(10, 200);
                     $rating = $product->rating ?? 4.5;
                 @endphp
@@ -46,7 +48,9 @@
 						</button>
 					</div>
 
+
                     <a href="{{ route('user.singleDetailsCategory', $product->id) }}" class="text-decoration-none text-dark">
+
 						<img src="{{ $thumbnail }}" class="card-img-top" style="height: 160px; object-fit: cover;" alt="{{ $product->name }} thumbnail">
 
                         <div class="card-body d-flex flex-column">
@@ -162,6 +166,7 @@
 
 
         $(document).on('click', '.add-to-cart', function (e) {
+
         e.preventDefault();
 
         const button = $(this);
@@ -195,6 +200,7 @@
                         button.find('.cart-icon').removeClass('d-none');
                         button.prop('disabled', false);
                     }, 1500);
+            
                 }
             },
             error: function (xhr) {
