@@ -52,6 +52,7 @@ Route::middleware(['auth', 'role:admin'])
 		Route::get('/reply/community/{id}',[AdminController::class, 'replyCommunityForm'])->name('replyCommunityForm');
 		Route::post('/reply/community/{id}',[AdminController::class, 'replyCommunity'])->name('replyCommunity');
 
+
         Route::prefix('order')->group(function () {
             Route::get('/list', [AdminController::class, 'ordersPage'])->name('ordersPage');
             Route::get('/fetch', [AdminController::class, 'fetchOrders'])->name('fetchOrders');

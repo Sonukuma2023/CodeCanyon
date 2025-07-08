@@ -249,6 +249,7 @@ class UserController extends Controller
 		return response()->json($communities);
 	}
 
+
 	public function showCategoryProducts($slug)
 	{
 		$categories = Category::latest()->get();

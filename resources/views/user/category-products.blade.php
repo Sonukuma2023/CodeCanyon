@@ -166,13 +166,19 @@
 		});
 
         $(document).on('click', '.add-to-cart', function (e) {
+<<<<<<< HEAD
             e.preventDefault();
+=======
+
+        e.preventDefault();
+>>>>>>> d1b4e82eb8e499ba3c1312275d315cdff5ec9993
 
             const button = $(this);
             const productId = button.data('id');
             const quantity = 1;
             const price = button.data('price');
 
+<<<<<<< HEAD
             $.ajax({
                 url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
                 type: "POST",
@@ -204,6 +210,35 @@
                 error: function (xhr) {
                     console.log(xhr);
                     button.prop('disabled', false);
+=======
+        $.ajax({
+            url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                quantity: quantity,
+                price: price
+            },
+            beforeSend: function () {
+                button.prop('disabled', true);
+            },
+            success: function (response) {
+                if (response.success) {
+                    $('.cart-count').text(response.cartCount);
+
+                    // Animate feedback
+                    button.addClass('cart-animate');
+                    button.find('.cart-icon').addClass('d-none');
+                    button.find('.cart-added').removeClass('d-none');
+
+                    setTimeout(() => {
+                        button.removeClass('cart-animate');
+                        button.find('.cart-added').addClass('d-none');
+                        button.find('.cart-icon').removeClass('d-none');
+                        button.prop('disabled', false);
+                    }, 1500);
+            
+>>>>>>> d1b4e82eb8e499ba3c1312275d315cdff5ec9993
                 }
             });
         });

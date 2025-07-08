@@ -55,6 +55,7 @@
         left: 10px;
         width: auto;
     }
+
 }
 .addtocart {
     display: inline-flex;
@@ -124,6 +125,9 @@
     margin-right: 6px;
     font-size: 0.9rem;
 }
+
+    }
+
 </style>
     <section class="hero">
         <div class="container">

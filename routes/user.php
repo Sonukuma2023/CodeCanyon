@@ -65,8 +65,15 @@ Route::middleware(['auth', 'role:user'])
 
         Route::post('/apply/coupon', [UserController::class, 'applyCoupon'])->name('user.applyCoupon');
 		
-    });
+        Route::post('/apply/coupon', [UserController::class, 'applyCoupon'])->name('user.applyCoupon');
+		
+
         // Route::post('/search-items', [SearchController::class, 'search'])->name('search.items');
         Route::post('/search-items', [SearchController::class, 'search'])->name('search.items');
         Route::get('/filter-products', [SearchController::class, 'filterProducts'])->name('filter.products');
+
+
+
+    });
+
 
