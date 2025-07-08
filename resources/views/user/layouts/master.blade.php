@@ -17,6 +17,15 @@
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 	<!-- Toastr CSS -->
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">  
+
+    <!-- Bootstrap CSS (latest stable) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+
 </head>
 <body>
 
@@ -44,6 +53,12 @@
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Bootstrap Bundle JS (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
     <script>
         @if(session('success'))
             toastr.options = {
@@ -185,6 +200,89 @@
 
     // Run setup on DOM load
     document.addEventListener('DOMContentLoaded', setupCheckoutPage);
+    </script>
+
+    <script>
+            $(document).ready(function () {
+        $.ajaxSetup({
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+        });
+
+
+        $(document).on('click', '.add-to-wishlist', function (e) {
+			e.preventDefault();
+
+			const button = $(this);
+			const productId = button.data('id');
+			const icon = button.find('i');
+
+			$.ajax({
+				url: "{{ route('user.addWhislist') }}",
+				method: "POST",
+				data: {
+					product_id: productId,
+					_token: "{{ csrf_token() }}"
+				},
+				success: function (response) {
+					if (response.status === 'added') {
+						icon.removeClass('bi-heart').addClass('bi-heart-fill text-danger');
+					} else if (response.status === 'removed') {
+						icon.removeClass('bi-heart-fill text-danger').addClass('bi-heart');
+					}
+				},
+				error: function (xhr) {
+					console.log(xhr);
+				}
+			});
+		});
+
+        $(document).on('click', '.add-to-cart', function (e) {
+            e.preventDefault();
+
+            const button = $(this);
+            const productId = button.data('id');
+            const quantity = 1;
+            const price = button.data('price');
+
+            $.ajax({
+                url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
+                type: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    quantity: quantity,
+                    price: price
+                },
+                beforeSend: function () {
+                    button.prop('disabled', true);
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $('.cart-count').text(response.cartCount);
+
+                        // Animate feedback
+                        button.addClass('cart-animate');
+                        button.find('.cart-icon').addClass('d-none');
+                        button.find('.cart-added').removeClass('d-none');
+
+                        setTimeout(() => {
+                            button.removeClass('cart-animate');
+                            button.find('.cart-added').addClass('d-none');
+                            button.find('.cart-icon').removeClass('d-none');
+                            button.prop('disabled', false);
+                        }, 1500);
+                    } else {
+                        button.prop('disabled', false);
+                        alert(response.message || "Something went wrong.");
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                    button.prop('disabled', false);
+                    alert("Failed to add to cart.");
+                }
+            });
+        });
+    });
     </script>
 	
 	<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
