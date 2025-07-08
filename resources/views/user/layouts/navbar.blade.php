@@ -18,7 +18,7 @@
 
             {{-- **************************search functuionality ******************************** --}}
             <div class="search-container">
-                <form action="{{ route('search.items') }}" class="search-form" method="POST">
+                <form action="{{ route('search.items') }}" class="search-form" method="get">
                     @csrf
                     <input type="search" name="query" placeholder="Search 50,000+ items..." aria-label="Search" value="{{ old('query', $query ?? '') }}">
 

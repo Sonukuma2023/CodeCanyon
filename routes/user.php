@@ -63,7 +63,7 @@ Route::middleware(['auth', 'role:user'])
         Route::get('user/cart/count',[CartController::class,'userCartCount'])->name('user.userCartCount');
 
         // Route::post('/search-items', [SearchController::class, 'search'])->name('search.items');
-        Route::post('/search-items', [SearchController::class, 'search'])->name('search.items');
+        Route::get('/search-items', [SearchController::class, 'search'])->name('search.items');
         Route::get('/filter-products', [SearchController::class, 'filterProducts'])->name('filter.products');
 
 

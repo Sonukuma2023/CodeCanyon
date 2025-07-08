@@ -45,22 +45,16 @@ class SearchController extends Controller
 
     $navbarCategories = Category::orderBy('created_at', 'asc')->get();
 
-    // If query is empty, redirect back
+
     if (empty($query)) {
         return back();
     }
 
-    // Search products by name
+
     $search_products = Product::with('category')
         ->where('name', 'LIKE', '%'.$query . '%')
         ->get();
 
-    // If no matching products
-    // if ($search_products->isEmpty()) {
-    //     return back();
-    // }
-
-    // ✅ Get only categories of matched products
     $categoryIds = $search_products->pluck('category_id')->unique();
     $categories = Category::whereIn('id', $categoryIds)->get();
 

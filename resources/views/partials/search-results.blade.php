@@ -80,22 +80,17 @@
 
                 <form id="filter-form">
                     <h5>Filter & Refine</h5>
-
-                    {{-- Price Range --}}
                     <div class="mb-3">
                         <label class="form-label">Price</label>
                         <div class="d-flex gap-2">
                             <input type="number" name="min_price" id ="min_price" class="form-control" placeholder="Min">
                             <input type="number" name="max_price" id ="max_price" class="form-control" placeholder="Max">
+                            {{-- <h5 class="card-title">{{ $product->name }}</h5> --}}
+                            <input type="text" name ="product_name" id= "product_name" value="{{$query}}">
                             <span><button type="submit" class="btn btn-primary w-100">></button></span>
                         </div>
                     </div>
-
-
                 </form>
-
-                {{-- Product Results --}}
-
 
 
 
@@ -109,6 +104,7 @@
 
                 {{-- Static Blade Rendered Products (only show if no AJAX response) --}}
                 <div id="static-products" class="row">
+
                     @forelse($search_products as $index => $product)
                         <div class="col-md-4 mb-4">
                             <div class="card h-100 shadow-sm">
