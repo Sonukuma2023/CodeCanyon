@@ -697,7 +697,6 @@ class AdminController extends Controller
 		]);
 	}
 
-
     public function ordersPage(){
         return view('admin.orders.orders_list');
     }
@@ -828,12 +827,11 @@ class AdminController extends Controller
         });
 
         return response()->json(['data' => $data]);
+    }
 
     public function single_categories_details($name, $slug){
 
         return $slug;
-
-
 
     }
 

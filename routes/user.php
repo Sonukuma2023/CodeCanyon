@@ -63,10 +63,10 @@ Route::middleware(['auth', 'role:user'])
         Route::post('save/cart/{id}',[CartController::class,'saveCart'])->name('user.saveCart');
         Route::get('user/cart/count',[CartController::class,'userCartCount'])->name('user.userCartCount');
 
-
         Route::post('/apply/coupon', [UserController::class, 'applyCoupon'])->name('user.applyCoupon');
 		
-    
+        Route::post('/apply/coupon', [UserController::class, 'applyCoupon'])->name('user.applyCoupon');
+		
 
         // Route::post('/search-items', [SearchController::class, 'search'])->name('search.items');
         Route::post('/search-items', [SearchController::class, 'search'])->name('search.items');

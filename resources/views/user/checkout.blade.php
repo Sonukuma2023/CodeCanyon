@@ -15,8 +15,6 @@
             <div class="col-lg-7">
                 <div class="card p-4 shadow-sm border-0 mb-4">
                     <h2 class="mb-4">Shipping Information</h2>
-                    <form method="POST" action="{{ route('checkout.process') }}">
-                        @csrf
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -108,7 +106,6 @@
                         </div>
 
                         <input type="hidden" name="stripe_token" id="stripe_token">
-                    </form>
                 </div>
             </div>
 
@@ -154,11 +151,14 @@
                         <span>${{ number_format($total, 2) }}</span>
                     </div>
 
+                    <!-- Hidden fields -->
+                    <input type="hidden" name="final_total" id="final_total" value="{{ $total }}">
+                    <input type="hidden" name="applied_coupon_code" id="applied_coupon_code" value="">
+
                     <div class="input-group mb-4">
                         <input type="text" name="coupon_code" id="coupon_code_input" class="form-control" placeholder="Coupon code (optional)">
                         <button type="button" class="btn btn-primary" onclick="applyCoupon()">Apply</button>
                     </div>
-
 
                     <button type="submit" class="btn btn-primary w-100 mt-3">Complete Order</button>
 
@@ -172,8 +172,6 @@
         @endif
     </div>
 </div>
-
-
 @endsection
 
 @section('scripts')
@@ -197,6 +195,8 @@ function applyCoupon() {
             if (response.success) {
                 Swal.fire('Success', response.message, 'success');
                 updateCartSummary(response.summary);
+                const code = document.getElementById('coupon_code_input').value;
+                $('#applied_coupon_code').val(code);
             } else {
                 Swal.fire('Invalid', response.message, 'warning');
             }
@@ -213,6 +213,8 @@ function updateCartSummary(summary) {
     $('span:contains("Discount")').next().text(`- $${summary.discount}`);
     $('span:contains("Tax")').next().text(`$${summary.tax}`);
     $('span:contains("Total")').next().text(`$${summary.total}`);
+
+    $('#final_total').val(summary.total);
 }
 </script>
 @endsection

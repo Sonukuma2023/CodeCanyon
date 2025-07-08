@@ -74,10 +74,4 @@ Route::middleware(['auth', 'role:admin'])
 
         // Route::get('single/{name}/{slug}', [AdminController::class, 'single_categories_details'])->name('single.category');
 
-
-
-
-
-
-
     });
