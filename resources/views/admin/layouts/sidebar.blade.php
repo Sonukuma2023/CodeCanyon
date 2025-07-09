@@ -118,6 +118,7 @@
                 <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link" href="{{ route('admin.couponAddPage') }}">Add Coupons</a></li>
                 <li class="nav-item"> <a class="nav-link" href="{{ route('admin.couponsPage') }}">View All</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{ route('admin.showUsedCoupons') }}">View Used Coupons</a></li>
                 </ul>
             </div>
         </li>

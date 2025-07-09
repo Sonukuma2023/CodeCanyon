@@ -198,10 +198,10 @@ class AdminController extends Controller
             'regular_license_price' => 'required|numeric',
             'extended_license_price' => 'required|numeric',
             'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
-            // 'inline_preview' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
-            // 'main_files.*' => 'required|mimes:zip|max:102400',
-            // 'preview.*' => 'required|mimes:zip|max:102400',
-            // 'live_preview.*' => 'nullable|mimes:zip|max:102400',
+            'inline_preview' => 'required|image|mimes:jpeg,png,jpg,gif|max:102400',
+            'main_files.*' => 'required|mimes:zip|max:102400',
+            'preview.*' => 'required|mimes:zip|max:102400',
+            'live_preview.*' => 'nullable|mimes:zip|max:102400',
             'status' => 'required|in:approved,pending',
         ]);
 
@@ -222,7 +222,7 @@ class AdminController extends Controller
 			$thumbnailPath = 'storage/uploads/thumbnails/' . $thumbnailName;
 		}
 
-		
+
         // $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
 
         if ($request->hasFile('inline_preview')) {
@@ -716,6 +716,7 @@ class AdminController extends Controller
                 'product_names' => $productNames,
                 'total' => '$ ' . number_format($order->total, 2),
                 'status' => ucfirst($order->payment_status),
+                'coupon_code' => $order->coupon_code ?? '-',
                 'created_at_human' => $order->created_at->diffForHumans(),
                 'actions' => '<a href="' . route('admin.singleOrderDetails', $order->id) . '" class="btn btn-sm btn-primary">View</a>',
             ];
@@ -767,7 +768,6 @@ class AdminController extends Controller
 
         $validator = Validator::make($request->all(), [
             'code' => 'required|string|unique:coupons,code|max:50',
-            'discount_amount' => 'nullable|numeric|min:0',
             'discount_percentage' => 'nullable|integer|min:1|max:100',
             'minimum_order_amount' => 'required|numeric|min:0',
             'usage_limit' => 'required|integer|min:1',
@@ -785,7 +785,6 @@ class AdminController extends Controller
 
         $coupon = Coupons::create([
             'code' => strtoupper($request->code),
-            'discount_amount' => $request->discount_amount,
             'discount_percentage' => $request->discount_percentage,
             'minimum_order_amount' => $request->minimum_order_amount,
             'usage_limit' => $request->usage_limit,
@@ -813,7 +812,6 @@ class AdminController extends Controller
             return [
                 'id' => $item->id,
                 'code' => $item->code,
-                'discount_amount' => $item->discount_amount ? '$' . $item->discount_amount : '-',
                 'discount_percentage' => $item->discount_percentage . '%',
                 'minimum_order_amount' => '$' . $item->minimum_order_amount,
                 'usage_limit' => $item->usage_limit,
@@ -822,9 +820,90 @@ class AdminController extends Controller
                     : 'No expiry',
                 'status' => $item->status,
                 'created_at' => $item->created_at->diffForHumans(),
-                'actions' => '<a href="#" class="btn btn-sm btn-primary">View</a>',
+                'actions' => '
+                    <a href="' . route('admin.editCoupon', $item->id) . '" class="btn btn-sm btn-warning me-1">Edit</a>
+                    <a href="#" class="btn btn-sm btn-danger me-1 remove-coupon" 
+                        data-id="' . $item->id . '" 
+                        data-href="' . route('admin.deleteCoupons', $item->id) . '">X</a>
+                ',
             ];
         });
+
+        return response()->json(['data' => $data]);
+    }
+
+
+    public function deleteCoupons($id)
+    {
+        $coupon = Coupons::find($id);
+
+        if (!$coupon) {
+            return response()->json(['success' => false, 'message' => 'Coupon not found.']);
+        }
+
+        try {
+            $coupon->delete();
+            return response()->json(['success' => true, 'message' => 'Coupon deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to delete coupon.']);
+        }
+    }
+
+    public function editCoupon($id)
+    {
+        $coupon = Coupons::findOrFail($id);
+        return view('admin.coupons.edit', compact('coupon'));
+    }
+
+    public function updateCoupon(Request $request, $id)
+    {
+        $request->validate([
+            'code' => 'required|string|max:255|unique:coupons,code,' . $id,
+            'discount_percentage' => 'nullable|numeric|min:0|max:100',
+            'minimum_order_amount' => 'nullable|numeric|min:0',
+            'usage_limit' => 'nullable|integer|min:0',
+            'expires_at' => 'nullable|date',
+            'active' => 'required|in:active,expired',
+        ]);
+
+        $coupon = Coupons::findOrFail($id);
+        $coupon->update([
+            'code' => $request->code,
+            'discount_percentage' => $request->discount_percentage,
+            'minimum_order_amount' => $request->minimum_order_amount,
+            'usage_limit' => $request->usage_limit,
+            'expires_at' => $request->expires_at,
+            'status' => $request->active,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Coupon updated successfully!']);
+    }
+
+    public function single_categories_details($name, $slug){
+
+        return $slug;
+
+    }
+
+    public function showUsedCoupons(){
+        return view('admin.coupons.coupon_used_list');
+    }
+
+    public function fetchUsedCoupons()
+    {
+        $data = \App\Models\UserCoupons::with(['user', 'coupon', 'order'])
+            ->latest()
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'coupon_code'     => $row->coupon->code ?? '-',
+                    'user_name'       => $row->user->name ?? '-',
+                    'discount_percent'=> $row->coupon->discount_percentage ?? 0,
+                    'order_id'        => $row->order->id ?? '-',
+                    'order_total'     => number_format($row->order->total ?? 0, 2),
+                    'used_at'         => $row->created_at->format('d M, Y h:i A'),
+                ];
+            });
 
         return response()->json(['data' => $data]);
     }

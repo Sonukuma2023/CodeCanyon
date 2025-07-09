@@ -40,7 +40,7 @@ class UserController extends Controller
             ->where('product_id', $product->id)
             ->latest()
             ->get();
-        
+
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
         return view('user.singleproduct', compact('product', 'relatedProducts', 'navbarCategories', 'reviews'));
     }
@@ -69,7 +69,7 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'Review submitted successfully.');
     }
-	
+
 	public function messagePage()
 	{
 		$categories = Category::latest()->get();
@@ -78,7 +78,7 @@ class UserController extends Controller
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
 		return view('user.messages', compact('categories', 'products', 'navbarCategories',));
 	}
-	
+
 	public function fetchMessages(Request $request)
 	{
 		try {
@@ -103,8 +103,8 @@ class UserController extends Controller
 			return response()->json(['error' => 'Server error'], 500);
 		}
 	}
-	
-	
+
+
 	public function messageSave(Request $request)
 	{
 		$request->validate([
@@ -114,29 +114,29 @@ class UserController extends Controller
 		$message = Messages::create([
 			'sender_id'   => auth()->id(),
 			'receiver_id' => 12,
-			'message'     => $request->message_content,	
+			'message'     => $request->message_content,
 			'sent_at'     => now(),
 		]);
-		
+
 		$url = route('admin.messagePage',['id' => auth()->user()->id ]);
-		
+
 		$notification = Notifications::create([
 			'sender_id'   => auth()->id(),
-			'receiver_id' => 12, 
+			'receiver_id' => 12,
 			'content'     => 'New message from: ' . auth()->user()->name,
 			'url'         => $url,
 			'sent_at'     => now(),
 		]);
-		
+
 		event(new MessageSent($message));
 		event(new NotificationSent($notification));
-		
+
 		return response()->json([
 			'success' => true,
 			'message' => 'Message and notification saved successfully'
 		]);
 	}
-	
+
 	public function markMessagesAsRead()
 	{
 		Messages::where('receiver_id', auth()->id())
@@ -145,17 +145,17 @@ class UserController extends Controller
 
 		return response()->json(['status' => 'success']);
 	}
-	
+
 	public function scriptRunnerPage()
 	{
 		$categories = Category::latest()->get();
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-		
+
 		return view('user.script-runner', compact('categories', 'products', 'navbarCategories',));
 	}
-	
+
 	public function runScript(Request $request)
 	{
 		$code = trim($request->input('code'));
@@ -187,18 +187,18 @@ class UserController extends Controller
 			'output' => $code
 		]);
 	}
-	
+
 	public function communityPage()
 	{
 		$categories = Category::latest()->get();
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-		
+
 		return view('user.community', compact('categories', 'products', 'navbarCategories',));
 	}
-	
-	
+
+
 	public function createCommunity(Request $request)
 	{
 		$request->validate([
@@ -207,11 +207,11 @@ class UserController extends Controller
 		]);
 
 		$community = Community::create([
-			'user_id' => auth()->id(), 
+			'user_id' => auth()->id(),
 			'comment' => $request->comment,
 			'complaint' => $request->complaint,
 		]);
-		
+
 		event(new CommunityCreated($community));
 
 		return response()->json([
@@ -220,17 +220,17 @@ class UserController extends Controller
 			'data' => $community
 		]);
 	}
-	
+
 	public function communityList()
 	{
 		$categories = Category::latest()->get();
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-		
+
 		return view('user.community-list', compact('categories', 'products', 'navbarCategories',));
 	}
-	
+
 
 	public function fetchCommunityList()
 	{
@@ -248,32 +248,56 @@ class UserController extends Controller
 
 		return response()->json($communities);
 	}
-	
 
-	public function showCategoryProducts($slug)
+
+	// public function showCategoryProducts($slug)
+	// {
+	// 	$categories = Category::latest()->get();
+    //     $products = Product::with('category')->latest()->get();
+    //     // view()->share('categories', $categories);
+    //     $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+	// 	$category = Category::where('name', $slug)->firstOrFail();
+	// 	$products = $category->products()->latest()->get();
+
+	// 	return view('user.category-products', compact('category', 'products', 'categories', 'products', 'navbarCategories'));
+	// }
+
+	public function showCategoryProducts($slug, Request $request)
 	{
+		$category = Category::where('name', $slug)->firstOrFail();
 		$categories = Category::latest()->get();
 		$navbarCategories = Category::orderBy('created_at', 'asc')->get();
 
-		$category = Category::where('name', $slug)->firstOrFail();
+		$query = $category->products()->with(['category', 'wishlistedBy'])->latest();
 
-		$products = $category->products()->with('wishlistedBy')->latest()->get();
+		if ($request->filled('min_price')) {
+			$query->where('regular_license_price', '>=', $request->min_price);
+		}
 
-		if (auth()->check()) {
-			$userWishlist = auth()->user()->wishlist->pluck('id')->toArray();
+		if ($request->filled('max_price')) {
+			$query->where('regular_license_price', '<=', $request->max_price);
+		}
 
-			$products->each(function ($product) use ($userWishlist) {
-				$product->is_wishlisted = in_array($product->id, $userWishlist);
-			});
-		} else {
-			$products->each(function ($product) {
-				$product->is_wishlisted = false;
-			});
+		if ($request->filled('rating')) {
+			$query->where('rating', '>=', $request->rating);
+		}
+
+		$products = $query->get();
+
+		// Mark each product as wishlisted
+		$products->each(function ($product) {
+			$product->is_wishlisted = auth()->check() && $product->wishlistedBy->contains(auth()->id());
+		});
+
+		if ($request->ajax()) {
+			$html = view('user.product-cards', compact('products'))->render();
+			return response()->json(['html' => $html]);
 		}
 
 		return view('user.category-products', compact('category', 'products', 'categories', 'navbarCategories'));
 	}
-
+	
 
 	public function addWhislist(Request $request)
 	{
@@ -359,8 +383,6 @@ class UserController extends Controller
 
 		$tax = $subtotal * 0.1;
 		$total = ($subtotal + $tax) - $discount;
-
-		Session::put('applied_coupon_id', $coupon->id);
 
 		return response()->json([
 			'success' => true,
