@@ -80,16 +80,32 @@ Route::middleware(['auth', 'role:user'])
         Route::get('/all/products', [SearchController::class, 'allProductPage'])->name('user.allProducts');
         Route::get('/all/products/data', [SearchController::class, 'allProductFilter'])->name('user.allProductFilter');
 
-        Route::get('/order/history', [ProfileController::class, 'userOrderHistory'])->name('user.OrderHistory');
-        Route::get('/order/history/data', [ProfileController::class, 'fetchOrdersHistory'])->name('user.fetchOrdersHistory');
-        Route::get('/order/details/{id}', [ProfileController::class, 'orderDetailsView'])->name('user.orderDetailsView');
-        Route::get('/wishlist', [ProfileController::class, 'userWishlist'])->name('user.wishlistPage');
-        Route::get('/wishlist/data', [ProfileController::class, 'fetchWishlistItems'])->name('user.fetchWishlistItems');
-        Route::post('/wishlist/delete', [ProfileController::class, 'deleteWishlist'])->name('user.deleteWishlist');
-        Route::get('/user/profile', [ProfileController::class, 'userProfileEdit'])->name('user.ProfileEdit');
-        Route::post('/user/profile', [ProfileController::class, 'userProfileUpdate'])->name('user.ProfileUpdate');
+        // Route::get('/order/history', [ProfileController::class, 'userOrderHistory'])->name('user.OrderHistory');
+        // Route::get('/order/history/data', [ProfileController::class, 'fetchOrdersHistory'])->name('user.fetchOrdersHistory');
+        // Route::get('/order/details/{id}', [ProfileController::class, 'orderDetailsView'])->name('user.orderDetailsView');
+        // Route::get('/wishlist', [ProfileController::class, 'userWishlist'])->name('user.wishlistPage');
+        // Route::get('/wishlist/data', [ProfileController::class, 'fetchWishlistItems'])->name('user.fetchWishlistItems');
+        // Route::post('/wishlist/delete', [ProfileController::class, 'deleteWishlist'])->name('user.deleteWishlist');
+        // Route::get('/user/profile', [ProfileController::class, 'userProfileEdit'])->name('user.ProfileEdit');
+        // Route::post('/user/profile', [ProfileController::class, 'userProfileUpdate'])->name('user.ProfileUpdate');
 
+        Route::prefix('order')->group(function () {
+            Route::get('/history', [ProfileController::class, 'userOrderHistory'])->name('user.OrderHistory');
+            Route::get('/history/data', [ProfileController::class, 'fetchOrdersHistory'])->name('user.fetchOrdersHistory');
+            Route::get('/details/{id}', [ProfileController::class, 'orderDetailsView'])->name('user.orderDetailsView');
+        });
 
+        Route::prefix('wishlist')->group(function () {
+            Route::get('/', [ProfileController::class, 'userWishlist'])->name('user.wishlistPage');
+            Route::get('/data', [ProfileController::class, 'fetchWishlistItems'])->name('user.fetchWishlistItems');
+            Route::post('/delete', [ProfileController::class, 'deleteWishlist'])->name('user.deleteWishlist');
+        });
+
+        Route::prefix('user')->group(function () {
+            Route::get('/profile', [ProfileController::class, 'userProfileEdit'])->name('user.ProfileEdit');
+            Route::post('/profile', [ProfileController::class, 'userProfileUpdate'])->name('user.ProfileUpdate');
+        });
+        
         Route::post('/load/products', [UserController::class, 'loadMore'])->name('user.loadMoreProducts');
 
     });
