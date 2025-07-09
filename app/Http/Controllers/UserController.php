@@ -279,9 +279,9 @@ class UserController extends Controller
 			$query->where('regular_license_price', '<=', $request->max_price);
 		}
 
-		if ($request->filled('rating')) {
-			$query->where('rating', '>=', $request->rating);
-		}
+		// if ($request->filled('rating')) {
+		// 	$query->where('rating', '>=', $request->rating);
+		// }
 
 		$products = $query->get();
 
@@ -291,7 +291,7 @@ class UserController extends Controller
 		});
 
 		if ($request->ajax()) {
-			$html = view('user.product-cards', compact('products'))->render();
+			$html = view('user.partials.product-cards', compact('products'))->render();
 			return response()->json(['html' => $html]);
 		}
 

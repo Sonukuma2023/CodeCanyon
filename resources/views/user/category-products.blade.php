@@ -59,7 +59,7 @@
         <h2 class="mb-4">{{ $category->name }} Scripts</h2>
 
         <div class="row g-4" id="product-container">
-            @include('user.product-cards', ['products' => $products])
+            @include('user.partials.product-cards', ['products' => $products])
         </div>
 
     </div>

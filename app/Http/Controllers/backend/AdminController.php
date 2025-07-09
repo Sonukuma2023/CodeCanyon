@@ -225,16 +225,28 @@ class AdminController extends Controller
 
         // $inlinePreviewPath = $request->hasFile('inline_preview') ? $request->file('inline_preview')->store('uploads/inline_previews', 'public') : null;
 
-        if ($request->hasFile('inline_preview')) {
-			$inlinePreviewName = time() . '---' . $request->file('inline_preview')->getClientOriginalName();
-			$inlineFile = $request->file('inline_preview');
-			$inlineFile->move(public_path('storage/uploads/inline_previews'), $inlinePreviewName);
-			$inlinePreviewPath = 'storage/uploads/inline_previews/' . $inlinePreviewName;
-		} else {
-			$inlinePreviewPath = null;
-			$inlinePreviewName = null;
-		}
+        $inlinePreviewPath = null;
+        $inlinePreviewName = null;
 
+        if ($request->hasFile('inline_preview')) {
+            $inlinePreviewName = time() . '---' . $request->file('inline_preview')->getClientOriginalName();
+            $image = $request->file('inline_preview');
+            $image->move(public_path('storage/uploads/inline_previews'), $inlinePreviewName);
+            $inlinePreviewPath = 'storage/uploads/inline_previews/' . $inlinePreviewName;
+        }
+
+        // if ($request->hasFile('main_files')) {
+        //     foreach ($request->file('main_files') as $file) {
+        //         if (!$this->scanFile($file)) {
+        //             \Log::error("Main file scan failed: " . $file->getClientOriginalName());
+        //             return redirect()->back()->with('error', 'One of the main files contains a virus or invalid file type.');
+        //         }
+
+        //         $mainFilePaths[] = $file->store('uploads/main_files', 'public');
+        //     }
+        // }
+
+        $mainFilePaths = [];
 
         if ($request->hasFile('main_files')) {
             foreach ($request->file('main_files') as $file) {
@@ -243,10 +255,15 @@ class AdminController extends Controller
                     return redirect()->back()->with('error', 'One of the main files contains a virus or invalid file type.');
                 }
 
-                $mainFilePaths[] = $file->store('uploads/main_files', 'public');
+                $mainFileName = time() . '---' . $file->getClientOriginalName();
+                $file->move(public_path('storage/uploads/main_files'), $mainFileName);
+                $mainFilePaths[] = 'storage/uploads/main_files/' . $mainFileName;
             }
         }
 
+
+        $previewPaths = [];
+        
         if ($request->hasFile('preview')) {
             foreach ($request->file('preview') as $file) {
                 if (!$this->scanFile($file)) {
@@ -254,9 +271,13 @@ class AdminController extends Controller
                     return redirect()->back()->with('error', 'One of the preview files contains a virus or invalid file type.');
                 }
 
-                $previewPaths[] = $file->store('uploads/previews', 'public');
+                $fileName = time() . '---' . $file->getClientOriginalName();
+                $file->move(public_path('storage/uploads/previews'), $fileName);
+                $previewPaths[] = 'storage/uploads/previews/' . $fileName;
             }
         }
+
+        $livePreviewPaths = [];
 
         if ($request->hasFile('live_preview')) {
             foreach ($request->file('live_preview') as $file) {
@@ -265,9 +286,12 @@ class AdminController extends Controller
                     return redirect()->back()->with('error', 'One of the live preview files contains a virus or invalid file type.');
                 }
 
-                $livePreviewPaths[] = $file->store('uploads/live_previews', 'public');
+                $fileName = time() . '---' . $file->getClientOriginalName();
+                $file->move(public_path('storage/uploads/live_previews'), $fileName);
+                $livePreviewPaths[] = 'storage/uploads/live_previews/' . $fileName;
             }
         }
+
 
         try {
             Product::create([

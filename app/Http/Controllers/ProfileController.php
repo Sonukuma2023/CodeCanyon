@@ -141,6 +141,7 @@ class ProfileController extends Controller
                 'product_name' => $product->name ?? 'N/A',
                 'price' => '$' . number_format($product->regular_license_price ?? 0, 2),
                 'added_on' => $item->created_at->format('d M Y'),
+                'action' => '<button class="btn btn-danger btn-sm remove-item" data-id="' . $item->id . '">Remove</button>',
             ];
         }
 
@@ -151,6 +152,28 @@ class ProfileController extends Controller
             "data" => $data,
         ]);
     }
+
+    public function deleteWishlist(Request $request)
+    {
+        $wishlistId = $request->input('id');
+
+        $wishlistItem = Whislist::find($wishlistId);
+
+        if (!$wishlistItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Wishlist item not found!'
+            ]);
+        }
+
+        $wishlistItem->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Wishlist deleted successfully.'
+        ]);
+    }
+
 
     public function userProfileEdit()
     {

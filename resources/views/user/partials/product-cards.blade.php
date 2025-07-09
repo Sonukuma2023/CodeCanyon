@@ -19,7 +19,7 @@
                 </button>
             </div>
 
-            <a href="{{ route('user.singleDetailsCategory', $product->id) }}" class="text-decoration-none text-dark">
+            <a href="{{ route('user.singleproduct', $product->id) }}" class="text-decoration-none text-dark">
                 <img src="{{ $thumbnail }}" class="card-img-top" style="height: 160px; object-fit: cover;" alt="{{ $product->name }} thumbnail">
 
                 <div class="card-body d-flex flex-column">
@@ -39,7 +39,7 @@
             @if(!empty($mainFiles))
                 <div class="mb-2">
                     @foreach($mainFiles as $file)
-                        <a href="{{ asset($file) }}" class="btn btn-sm btn-success me-1 mb-1" download>
+                        <a href="{{ asset($file) }}" class="btn btn-sm btn-success me-1 mb-1" download="{{ basename($file) }}">
                             Main File
                         </a>
                     @endforeach
@@ -49,7 +49,7 @@
             @if(!empty($previewFiles))
                 <div class="mb-2">
                     @foreach($previewFiles as $file)
-                        <a href="{{ asset($file) }}" class="btn btn-sm btn-info me-1 mb-1" download>
+                        <a href="{{ asset($file) }}" class="btn btn-sm btn-info me-1 mb-1" download="{{ basename($file) }}">
                             Preview File
                         </a>
                     @endforeach
@@ -59,8 +59,8 @@
             @if(!empty($livePreviewFiles))
                 <div class="mb-2">
                     @foreach($livePreviewFiles as $file)
-                        <a href="{{ asset($file) }}" class="btn btn-sm btn-warning me-1 mb-1" download>
-                            Live Preview File
+                        <a href="{{ asset($file) }}" class="btn btn-sm btn-warning me-1 mb-1" download="{{ basename($file) }}">
+                            Preview Live
                         </a>
                     @endforeach
                 </div>

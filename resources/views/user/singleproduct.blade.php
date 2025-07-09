@@ -6,12 +6,12 @@
         <div class="product-grid">
             <!-- Product Gallery -->
             <div class="product-gallery">
-                <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}" loading="lazy">
+                <img src="{{ asset('storage/uploads/thumbnails/' . $product->thumbnail) }}" alt="{{ $product->name }}" loading="lazy">
                 <div class="thumbnail-grid">
-                    <img src="{{ asset('storage/' . $product->inline_preview) }}" alt="{{ $product->name }}" loading="lazy">
-                    <img src="{{ asset('storage/' . $product->inline_preview) }}" alt="{{ $product->name }}" loading="lazy">
-                    <img src="{{ asset('storage/' . $product->inline_preview) }}" alt="{{ $product->name }}" loading="lazy">
-                    <img src="{{ asset('storage/' . $product->inline_preview) }}" alt="{{ $product->name }}" loading="lazy">
+                    <img src="{{ asset('storage/uploads/inline_previews/' . $product->inline_preview) }}" alt="{{ $product->name }}" loading="lazy">
+                    <img src="{{ asset('storage/uploads/inline_previews/' . $product->inline_preview) }}" alt="{{ $product->name }}" loading="lazy">
+                    <img src="{{ asset('storage/uploads/inline_previews/' . $product->inline_preview) }}" alt="{{ $product->name }}" loading="lazy">
+                    <img src="{{ asset('storage/uploads/inline_previews/' . $product->inline_preview) }}" alt="{{ $product->name }}" loading="lazy">
                 </div>
             </div>
 
@@ -55,12 +55,16 @@
 
                 <div class="product-actions">
                     <div class="price"></div>
-                        <form action="{{ route('cart.add', $product->id) }}" method="POST">
-                            @csrf
-                            <button class="btn btn-primary w-100" style="border:none;"><i class="fas fa-shopping-cart me-2"></i>
-
-                            Add to Cart ${{ number_format($product->regular_license_price, 2) }}</button>
-                        </form>
+                        <button class="addtocart btn w-100" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
+                            <div class="pretext">
+                                <i class="fas fa-cart-plus"></i> ADD TO CART ${{ number_format($product->regular_license_price, 2) }}
+                            </div>
+                            <div class="done">
+                                <div class="posttext">
+                                    <i class="fas fa-check"></i> ADDED
+                                </div>
+                            </div>
+                        </button>
                 </div>
 
                 <div class="product-card">
@@ -118,7 +122,7 @@
                 @foreach ($relatedProducts as $relatedProduct)
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="{{ asset('storage/' . $relatedProduct->thumbnail) }}" alt="{{ $relatedProduct->name }}" loading="lazy">
+                            <img src="{{ asset('storage/uploads/thumbnails/' . $relatedProduct->thumbnail) }}" alt="{{ $relatedProduct->name }}" loading="lazy">
                             <a href="{{ route('user.singleproduct', $relatedProduct->id) }}" class="quick-view" data-product-id="{{ $relatedProduct->id }}">Quick View</a>
                         </div>
                         

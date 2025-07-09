@@ -84,6 +84,7 @@ Route::middleware(['auth', 'role:user'])
         Route::get('/order/history/data', [ProfileController::class, 'fetchOrdersHistory'])->name('user.fetchOrdersHistory');
         Route::get('/wishlist', [ProfileController::class, 'userWishlist'])->name('user.wishlistPage');
         Route::get('/wishlist/data', [ProfileController::class, 'fetchWishlistItems'])->name('user.fetchWishlistItems');
+        Route::post('/wishlist/delete', [ProfileController::class, 'deleteWishlist'])->name('user.deleteWishlist');
         Route::get('/user/profile', [ProfileController::class, 'userProfileEdit'])->name('user.ProfileEdit');
         Route::post('/user/profile', [ProfileController::class, 'userProfileUpdate'])->name('user.ProfileUpdate');
 

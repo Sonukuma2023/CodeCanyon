@@ -24,8 +24,84 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    .addtocart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em 1.2em;
+    border-radius: 25px;
+    border: none;
+    font-size: 0.9rem;
+    background: #0652DD;
+    color: #fff;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+    min-width: auto;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+}
 
+.addtocart:hover {
+    transform: scale(1.05);
+}
 
+.addtocart .pretext {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.addtocart.added .pretext {
+    opacity: 0;
+}
+
+.addtocart .done {
+    position: absolute;
+    inset: 0;
+    background: #38c172;
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    color: #fff;
+}
+
+.addtocart.added .done {
+    transform: translateX(0);
+}
+
+.addtocart .posttext {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.fa-cart-plus, .fa-check {
+    margin-right: 6px;
+    font-size: 0.9rem;
+}
+.addtocart:hover, .addtocart:active, .addtocart:focus-visible, .addtocart:focus-within {
+    background: #0652DD !important;
+    color: #fff !important;
+    transform: unset !important;
+}
+.addtocart .done {
+    background:#38c172 !important;
+}
+</style>
 </head>
 <body>
 
@@ -203,7 +279,7 @@
     </script>
 
     <script>
-            $(document).ready(function () {
+    $(document).ready(function () {
         $.ajaxSetup({
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
         });
@@ -236,13 +312,17 @@
 			});
 		});
 
-        $(document).on('click', '.add-to-cart', function (e) {
+        $(document).on('click', '.add-to-cart, .addtocart', function (e) {
             e.preventDefault();
 
             const button = $(this);
             const productId = button.data('id');
-            const quantity = 1;
             const price = button.data('price');
+            const quantity = 1;
+
+            if (button.hasClass('processing') || button.hasClass('added') || button.prop('disabled')) return;
+
+            button.addClass('processing').prop('disabled', true);
 
             $.ajax({
                 url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
@@ -252,33 +332,40 @@
                     quantity: quantity,
                     price: price
                 },
-                beforeSend: function () {
-                    button.prop('disabled', true);
-                },
                 success: function (response) {
                     if (response.success) {
                         $('.cart-count').text(response.cartCount);
 
-                        // Animate feedback
-                        button.addClass('cart-animate');
-                        button.find('.cart-icon').addClass('d-none');
-                        button.find('.cart-added').removeClass('d-none');
+                        if (button.hasClass('add-to-cart')) {
+                            button.addClass('cart-animate');
+                            button.find('.cart-icon').addClass('d-none');
+                            button.find('.cart-added').removeClass('d-none');
 
-                        setTimeout(() => {
-                            button.removeClass('cart-animate');
-                            button.find('.cart-added').addClass('d-none');
-                            button.find('.cart-icon').removeClass('d-none');
-                            button.prop('disabled', false);
-                        }, 1500);
+                            setTimeout(() => {
+                                button.removeClass('cart-animate processing');
+                                button.find('.cart-added').addClass('d-none');
+                                button.find('.cart-icon').removeClass('d-none');
+                                button.prop('disabled', false);
+                            }, 1500);
+                        }
+
+                        else if (button.hasClass('addtocart')) {
+                            button.addClass('added');
+
+                            setTimeout(() => {
+                                button.removeClass('added processing');
+                                button.prop('disabled', false);
+                            }, 2000);
+                        }
                     } else {
-                        button.prop('disabled', false);
-                        alert(response.message || "Something went wrong.");
+                        button.removeClass('processing').prop('disabled', false);
+                        // alert(response.message || "Something went wrong.");
                     }
                 },
                 error: function (xhr) {
                     console.log(xhr);
-                    button.prop('disabled', false);
-                    alert("Failed to add to cart.");
+                    button.removeClass('processing').prop('disabled', false);
+                    // alert("Failed to add to cart.");
                 }
             });
         });
