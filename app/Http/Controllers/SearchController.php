@@ -40,55 +40,93 @@ class SearchController extends Controller
     // }
 
     public function search(Request $request)
-{
-    $query = $request->input('query');
+    {
+        $query = $request->input('query');
 
-    $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+        $navbarCategories = Category::orderBy('created_at', 'asc')->get();
 
-    // If query is empty, redirect back
-    if (empty($query)) {
-        return back();
+        // If query is empty, redirect back
+        if (empty($query)) {
+            return back();
+        }
+
+        // Search products by name
+        $search_products = Product::with('category')
+            ->where('name', 'LIKE', '%'.$query . '%')
+            ->get();
+
+        // If no matching products
+        // if ($search_products->isEmpty()) {
+        //     return back();
+        // }
+
+        // ✅ Get only categories of matched products
+        $categoryIds = $search_products->pluck('category_id')->unique();
+        $categories = Category::whereIn('id', $categoryIds)->get();
+
+        return view('partials.search-results', compact('search_products', 'categories', 'query', 'navbarCategories'));
     }
 
-    // Search products by name
-    $search_products = Product::with('category')
-        ->where('name', 'LIKE', '%'.$query . '%')
-        ->get();
 
-    // If no matching products
-    // if ($search_products->isEmpty()) {
-    //     return back();
-    // }
+    public function filterProducts(Request $request)
+    {
+        $query = Product::query();
 
-    // ✅ Get only categories of matched products
-    $categoryIds = $search_products->pluck('category_id')->unique();
-    $categories = Category::whereIn('id', $categoryIds)->get();
+        if ($request->filled('min_price')) {
+            $query->where('regular_license_price', '>=', $request->min_price);
+        }
 
-    return view('partials.search-results', compact('search_products', 'categories', 'query', 'navbarCategories'));
-}
+        if ($request->filled('max_price')) {
+            $query->where('regular_license_price', '<=', $request->max_price);
+        }
 
+        $products = $query->get();
 
-public function filterProducts(Request $request)
-{
+        return response()->json(['products' => $products]);
 
-
-    $query = Product::query();
-
-    if ($request->filled('min_price')) {
-        $query->where('regular_license_price', '>=', $request->min_price);
     }
 
-    if ($request->filled('max_price')) {
-        $query->where('regular_license_price', '<=', $request->max_price);
+    public function allProductPage()
+    {
+        $products = Product::with('category')->latest()->get();
+        $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+        $categories = Category::all();
+        return view('user.all_products', compact('categories','products', 'navbarCategories'));
     }
 
-    $products = $query->get();
+    public function allProductFilter(Request $request)
+    {
+        $query = Product::with(['category', 'wishlistedBy'])->latest();
 
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
 
+        if ($request->filled('min_price')) {
+            $query->where('regular_license_price', '>=', $request->min_price);
+        }
 
-    return response()->json(['products' => $products]);
+        if ($request->filled('max_price')) {
+            $query->where('regular_license_price', '<=', $request->max_price);
+        }
 
-}
+        $products = $query->get();
+
+        if (auth()->check()) {
+            $userId = auth()->id();
+            $products->each(function ($product) use ($userId) {
+                $product->is_wishlisted = $product->wishlistedBy->contains($userId);
+            });
+        } else {
+            $products->each(function ($product) {
+                $product->is_wishlisted = false;
+            });
+        }
+
+        return view('user.partials.product-list', compact('products'))->render();
+    }
+
 
 
 

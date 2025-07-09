@@ -73,7 +73,12 @@
 
             <!-- Product Preview Image -->
             <div class="mb-4 text-center">
-                <img src="{{ asset('storage/uploads/thumbnails/' . $product->thumbnail) }}" class="img-fluid rounded shadow" alt="{{ $product->name }}">
+                <!-- <img src="{{ asset('storage/uploads/thumbnails/' . $product->thumbnail) }}" class="img-fluid rounded shadow" alt="{{ $product->name }}"> -->
+                 <img src="{{ $product->thumbnail && file_exists(public_path('storage/uploads/thumbnails/' . $product->thumbnail)) 
+                        ? asset('storage/uploads/thumbnails/' . $product->thumbnail) 
+                        : asset('storage/uploads/thumbnails/default-image.png') }}" 
+                        class="img-fluid rounded shadow"
+                        alt="{{ $product->title }}">
             </div>
 
             <div class="mb-4">
@@ -81,9 +86,8 @@
                 <p>{{ $product->description }}</p>
             </div>
 
-
             <div class="mb-4 text-center">
-                <img src="{{ asset('storage/uploads/inline_preview/' . $product->inline_preview) }}" class="img-fluid rounded shadow" alt="{{ $product->name }}">
+                <img src="{{ $product->inline_preview && file_exists(public_path('storage/uploads/inline_preview/' . $product->inline_preview)) ? asset('storage/uploads/inline_preview/' . $product->inline_preview) : asset('storage/uploads/thumbnails/default-image.png') }}" class="img-fluid rounded shadow" alt="{{ $product->name }}">
             </div>
 
             <div class="mb-4">

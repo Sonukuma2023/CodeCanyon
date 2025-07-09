@@ -70,6 +70,11 @@ Route::middleware(['auth', 'role:admin'])
             Route::post('/add', [AdminController::class, 'storeCoupon'])->name('storeCoupon');
             Route::get('/ajax/list', [AdminController::class, 'fetchCoupons'])->name('fetchCoupons');
             Route::get('/list', [AdminController::class, 'couponsPage'])->name('couponsPage');
+            Route::get('/used',[AdminController::class, 'showUsedCoupons'])->name('showUsedCoupons');
+            Route::get('/used/data',[AdminController::class, 'fetchUsedCoupons'])->name('fetchUsedCoupons');
+            Route::delete('/{id}', [AdminController::class, 'deleteCoupons'])->name('deleteCoupons');
+            Route::get('/edit/{id}', [AdminController::class, 'editCoupon'])->name('editCoupon');
+            Route::put('/edit/{id}', [AdminController::class, 'updateCoupon'])->name('updateCoupon');
         });
 
         // Route::get('single/{name}/{slug}', [AdminController::class, 'single_categories_details'])->name('single.category');
