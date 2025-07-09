@@ -45,6 +45,7 @@ class SearchController extends Controller
 
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
 
+
         // If query is empty, redirect back
         if (empty($query)) {
             return back();
@@ -67,6 +68,56 @@ class SearchController extends Controller
         return view('partials.search-results', compact('search_products', 'categories', 'query', 'navbarCategories'));
     }
 
+
+        return view('partials.search-results', compact('search_products', 'categories', 'query', 'navbarCategories'));
+    }
+
+
+
+    public function filterProducts(Request $request)
+    {
+        $product = Product::get();
+        if ($product) {
+
+            $product_search = Product::where('name', 'like', '%' . $request->product_name . '%')
+                ->whereBetween('regular_license_price', [$request->min_price, $request->max_price])
+                ->get();
+
+            if ($product_search) {
+                return response()->json(['products' => $product_search]);
+            }
+        }
+    }
+
+  public function product_sale_search(Request $request)
+{
+    $query = Product::query();
+
+
+
+    if ($request->filled('product_name')) {
+        $query->where('name', 'like', '%' . $request->product_name . '%');
+    }
+
+
+    if ($request->filled('sales') && $request->filled('on_sale')) {
+        $query->whereIn('sales', $request->sales)
+              ->where('on_sale', $request->onsale);
+    } elseif ($request->filled('sales')) {
+
+        $query->whereIn('sales', $request->sales);
+
+    } elseif ($request->filled('onsale')) {
+
+        $query->where('on_sale', $request->onsale);
+
+    }
+
+
+    $products = $query->get();
+    
+       return response()->json(['products' => $products]);
+}
 
     public function filterProducts(Request $request)
     {
@@ -103,9 +154,11 @@ class SearchController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
+
         if ($request->filled('min_price')) {
             $query->where('regular_license_price', '>=', $request->min_price);
         }
+
 
         if ($request->filled('max_price')) {
             $query->where('regular_license_price', '<=', $request->max_price);
@@ -131,4 +184,25 @@ class SearchController extends Controller
 
 
 
+    // public function product_on_sale_search(Request $request)
+    // {
+
+
+
+    //     // $query = Product::query();
+
+    //     // $product = Product::find($request->sales);
+
+
+    //     if ($request) {
+
+    //         $products = Product::where('name', 'like', '%' . $request->product_name . '%')
+    //             ->where('on_sale', $request->sales)->get();
+
+    //         if ($products) {
+
+    //             return response()->json(['products' => $products]);
+    //         }
+    //     }
+    // }
 }
