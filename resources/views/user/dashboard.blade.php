@@ -150,33 +150,47 @@
 
 
 	<!-- Custom Tools Section -->
-	<section class="tools-section bg-white">
-		<div class="container">
-			<div class="row g-4">
+    <section class="tools-section bg-white">
+        <div class="container">
+            <div class="row g-4">
 
-				<div class="col-md-3">
-					<a href="{{ route('user.communityList') }}" class="category-card text-center">
-						<div class="category-icon">
-							<i class="bi bi-people-fill"></i>
-						</div>
-						<h3>Community</h3>
-						<p class="item-count">Discuss & Share</p>
-					</a>
-				</div>
+                <!-- Community Card -->
+                <div class="col-md-3">
+                    <a href="{{ route('user.communityList') }}" class="category-card text-center">
+                        <div class="category-icon">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h3>Community</h3>
+                        <p class="item-count">Discuss & Share</p>
+                    </a>
+                </div>
 
-				<!-- Script Runner Card -->
-				<div class="col-md-3">
-					<a href="{{ route('user.scriptRunnerPage') }}" class="category-card text-center">
-						<div class="category-icon">
-							<i class="bi bi-terminal-fill"></i>
-						</div>
-						<h3>Script Runner</h3>
-						<p class="item-count">Try & Execute Code</p>
-					</a>
-				</div>
-			</div>
-		</div>
-	</section>
+                <!-- Script Runner Card -->
+                <div class="col-md-3">
+                    <a href="{{ route('user.scriptRunnerPage') }}" class="category-card text-center">
+                        <div class="category-icon">
+                            <i class="bi bi-terminal-fill"></i>
+                        </div>
+                        <h3>Script Runner</h3>
+                        <p class="item-count">Try & Execute Code</p>
+                    </a>
+                </div>
+
+                <!-- All Products Card -->
+                <div class="col-md-3">
+                    <a href="{{ route('user.allProducts') }}" class="category-card text-center">
+                        <div class="category-icon">
+                            <i class="bi bi-box-seam"></i> <!-- Box icon for products -->
+                        </div>
+                        <h3>All Products</h3>
+                        <p class="item-count">Browse All Scripts</p>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
 
 
     <!-- Categories Section -->
@@ -244,7 +258,7 @@
                     @if($product->status != 'pending')
                         <div class="product-card">
                             <div class="product-image">
-                                <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}" loading="lazy">
+                                <img src="{{ asset('storage/uploads/thumbnails/' . $product->thumbnail) }}" alt="{{ $product->name }}" loading="lazy">
                                 <a href="{{ route('user.singleproduct', $product->id) }}" class="quick-view" data-product-id="{{ $product->id }}">Quick View</a>
                             </div>
 

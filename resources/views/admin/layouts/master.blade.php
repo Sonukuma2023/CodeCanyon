@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="csrf-token" content="{{ csrf_token() }}">
     <title>All In OneScript | One-Stop Shop for Ready-Made Scripts</title>
     <link rel="stylesheet"
         href="{{ asset('backend/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
@@ -66,13 +67,12 @@
     </script>
     <script src="{{ asset('backend/assets/vendors/jvectormap/jquery-jvectormap.min.js') }}">
     </script>
-    <script
-        src="{{ asset('backend/assets/vendors/jvectormap/jquery-jvectormap-world-mill-en.js') }}">
+    <script src="{{ asset('backend/assets/vendors/jvectormap/jquery-jvectormap-world-mill-en.js') }}">
     </script>
     <script src="{{ asset('backend/assets/vendors/owl-carousel-2/owl.carousel.min.js') }}">
     </script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ asset('backend/assets/js/off-canvas.js') }}"></script>
     <script src="{{ asset('backend/assets/js/hoverable-collapse.js') }}"></script>
     <script src="{{ asset('backend/assets/js/misc.js') }}"></script>

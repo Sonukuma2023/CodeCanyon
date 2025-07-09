@@ -8,7 +8,7 @@
                 Your cart is empty. Please <a href="{{ route('dashboard') }}">add some products</a> before checking out.
             </div>
         @else
-        <form id="payment-form" method="POST" action="{{ route('checkout.process') }}">
+        <form id="payment-form">
         @csrf
         <div class="row g-4">
             <!-- Left: Shipping + Payment -->
@@ -160,7 +160,7 @@
                         <button type="button" class="btn btn-primary" onclick="applyCoupon()">Apply</button>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 mt-3">Complete Order</button>
+                    <button type="submit" class="btn btn-primary">Complete Order</button>
 
                     <div class="text-center mt-3 text-muted small">
                         <i class="fas fa-lock me-1 text-success"></i> Secure checkout
@@ -215,6 +215,38 @@ function updateCartSummary(summary) {
     $('span:contains("Total")').next().text(`$${summary.total}`);
 
     $('#final_total').val(summary.total);
+}
+
+function submitViaAjax() {
+    const form = $('#payment-form');
+    const submitBtn = form.find('button[type="submit"]');
+    submitBtn.prop('disabled', true).text('Processing...');
+
+    showLoader();
+
+    $.ajax({
+        url: "{{ route('checkout.process') }}",
+        type: 'POST',
+        data: form.serialize(),
+        success: function (response) {
+            hideLoader();
+            submitBtn.prop('disabled', false).text('Complete Order');
+
+            if (response.success && response.redirect_url) {
+                Swal.fire('Success', 'Redirecting to confirmation...', 'success');
+                window.location.href = response.redirect_url;
+            } else {
+                Swal.fire('Error', response.message || 'Unexpected error', 'error');
+            }
+        },
+        error: function (xhr) {
+            hideLoader();
+            submitBtn.prop('disabled', false).text('Complete Order');
+            const message = xhr.responseJSON?.message || 'Something went wrong.';
+            Swal.fire('Error', message, 'error');
+            console.log(xhr);
+        }
+    });
 }
 </script>
 @endsection

@@ -46,14 +46,36 @@
                     <a href="{{ route('register') }}" class="btn btn-primary btn-sm">Join Free</a>
                 @endguest
 
-                @auth
+                <!-- @auth
                     <form action="{{ route('user.logout') }}" method="POST" style="display:inline;">
                         @csrf
                         <button type="submit" class="btn btn-primary btn-sm" style="border:none;">Sign out</button>
                         <button type="submit" class="btn btn-primary btn-sm" style="border:none;">Become an
                             Author</button>
                     </form>
+                @endauth -->
+
+                @auth
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-5 me-1"></i>
+                        {{ Auth::user()->name }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="{{ route('user.OrderHistory') }}"><i class="bi bi-bag-check me-2"></i>Order History</a></li>
+                        <li><a class="dropdown-item" href="{{ route('user.ProfileEdit') }}"><i class="bi bi-person-lines-fill me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="{{ route('user.wishlistPage') }}"><i class="bi bi-heart-fill me-2"></i>Wishlist</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form action="{{ route('user.logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div> 
                 @endauth
+
 
             </div>
         </div>

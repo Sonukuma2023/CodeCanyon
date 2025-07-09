@@ -1,6 +1,7 @@
 @extends('admin.layouts.master')
-@section('title', 'Orders List')
+@section('title', 'Used Coupons')
 @section('content')
+
 <style>
     .table th,
     .table td {
@@ -18,25 +19,23 @@
     }
 </style>
 
-<h4 class="card-title">All Orders</h4>
+<h4 class="card-title">Used Coupons List</h4>
 <div class="table-responsive">
     <table class="table table-bordered align-middle text-start w-100">
         <thead class="table-light">
             <tr>
                 <th>#</th>
-                <th>Order ID</th>
-                <th>User</th>
-                <th>Product</th>
-                <th>Total</th>
-                <th>Status</th>
                 <th>Coupon Code</th>
-                <th>Created At</th>
-                <th>Actions</th>
+                <th>User</th>
+                <th>Discount</th>
+                <th>Order ID</th>
+                <th>Order Total</th>
+                <th>Used On</th>
             </tr>
         </thead>
-        <tbody id="ordersTableBody">
+        <tbody id="usedCouponsTableBody">
             <tr>
-                <td colspan="8" class="text-muted text-center">Loading...</td>
+                <td colspan="7" class="text-muted text-center">Loading...</td>
             </tr>
         </tbody>
     </table>
@@ -45,40 +44,38 @@
 
 @section('scripts')
 <script>
-    function loadOrdersData() {
+    function loadUsedCoupons() {
         $.ajax({
-            url: "{{ route('admin.fetchOrders') }}", 
+            url: "{{ route('admin.fetchUsedCoupons') }}",
             type: 'GET',
             success: function (res) {
                 let html = '';
                 if (!res.data || res.data.length === 0) {
-                    html = `<tr><td colspan="8" class="text-muted text-center">No orders found.</td></tr>`;
+                    html = `<tr><td colspan="7" class="text-muted text-center">No used coupons found.</td></tr>`;
                 } else {
                     res.data.forEach((item, index) => {
                         html += `
                             <tr>
                                 <td>${index + 1}</td>
-                                <td>${item.order_id}</td>
-                                <td>${item.user_name}</td>
-                                <td>${item.product_names}</td>
-                                <td>${item.total}</td>
-                                <td>${item.status}</td>
                                 <td>${item.coupon_code}</td>
-                                <td>${item.created_at_human}</td>
-                                <td>${item.actions}</td>
+                                <td>${item.user_name}</td>
+                                <td>${item.discount_percent}%</td>
+                                <td>#${item.order_id}</td>
+                                <td>$${item.order_total}</td>
+                                <td>${item.used_at}</td>
                             </tr>
                         `;
                     });
                 }
-                $('#ordersTableBody').html(html);
+                $('#usedCouponsTableBody').html(html);
             },
             error: function (xhr) {
-                $('#ordersTableBody').html('<tr><td colspan="8" class="text-danger text-center">Failed to load orders.</td></tr>');
+                $('#usedCouponsTableBody').html('<tr><td colspan="7" class="text-danger text-center">Failed to load data.</td></tr>');
                 console.error(xhr.responseText);
             }
         });
     }
 
-    $(document).ready(loadOrdersData);
+    $(document).ready(loadUsedCoupons);
 </script>
 @endsection
