@@ -40,80 +40,95 @@ class SearchController extends Controller
     // }
 
     public function search(Request $request)
-{
-    $query = $request->input('query');
+    {
+        $query = $request->input('query');
 
-    $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+        $navbarCategories = Category::orderBy('created_at', 'asc')->get();
 
 
-    if (empty($query)) {
-        return back();
+        if (empty($query)) {
+            return back();
+        }
+
+
+        $search_products = Product::with('category')
+            ->where('name', 'LIKE', '%' . $query . '%')
+            ->get();
+
+        $categoryIds = $search_products->pluck('category_id')->unique();
+        $categories = Category::whereIn('id', $categoryIds)->get();
+
+        return view('partials.search-results', compact('search_products', 'categories', 'query', 'navbarCategories'));
     }
 
 
-    $search_products = Product::with('category')
-        ->where('name', 'LIKE', '%'.$query . '%')
-        ->get();
+    public function filterProducts(Request $request)
+    {
+        $product = Product::get();
+        if ($product) {
 
-    $categoryIds = $search_products->pluck('category_id')->unique();
-    $categories = Category::whereIn('id', $categoryIds)->get();
+            $product_search = Product::where('name', 'like', '%' . $request->product_name . '%')
+                ->whereBetween('regular_license_price', [$request->min_price, $request->max_price])
+                ->get();
 
-    return view('partials.search-results', compact('search_products', 'categories', 'query', 'navbarCategories'));
-}
+            if ($product_search) {
+                return response()->json(['products' => $product_search]);
+            }
+        }
+    }
 
-
-// public function filterProducts(Request $request)
-// {
-
-
-//     $query = Product::query();
-
-//     $product_name = $request->product_name;
-
-
-//     if ($request->filled('min_price')) {
-//         $query->where('regular_license_price', '>=', $request->min_price);
-//     }
-
-//     if ($request->filled('max_price')) {
-//         $query->where('regular_license_price', '<=', $request->max_price);
-//     }
-
-//     $products = $query->get();
-
-
-
-//     return response()->json(['products' => $products]);
-
-// }
-
-public function filterProducts(Request $request)
+  public function product_sale_search(Request $request)
 {
     $query = Product::query();
 
-    // Filter by product name if provided
-    if ($request->filled('name')) {
+
+
+    if ($request->filled('product_name')) {
         $query->where('name', 'like', '%' . $request->product_name . '%');
     }
 
-    // Filter by min price if provided
-    if ($request->filled('min_price')) {
-        $query->where('regular_license_price', '>=', $request->min_price);
+
+    if ($request->filled('sales') && $request->filled('on_sale')) {
+        $query->whereIn('sales', $request->sales)
+              ->where('on_sale', $request->onsale);
+    } elseif ($request->filled('sales')) {
+
+        $query->whereIn('sales', $request->sales);
+
+    } elseif ($request->filled('onsale')) {
+
+        $query->where('on_sale', $request->onsale);
+
     }
 
-    // Filter by max price if provided
-    if ($request->filled('max_price')) {
-        $query->where('regular_license_price', '<=', $request->max_price);
-    }
 
-    // Fetch matching products
     $products = $query->get();
+
 
     return response()->json(['products' => $products]);
 }
 
 
 
+    // public function product_on_sale_search(Request $request)
+    // {
 
 
+
+    //     // $query = Product::query();
+
+    //     // $product = Product::find($request->sales);
+
+
+    //     if ($request) {
+
+    //         $products = Product::where('name', 'like', '%' . $request->product_name . '%')
+    //             ->where('on_sale', $request->sales)->get();
+
+    //         if ($products) {
+
+    //             return response()->json(['products' => $products]);
+    //         }
+    //     }
+    // }
 }

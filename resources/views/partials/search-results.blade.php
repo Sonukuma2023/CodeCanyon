@@ -57,13 +57,18 @@
             }
         }
     </style>
+    <div id="container" style="text-align: center;">
+        <span id="relevant"></span>
+        <span id="relevant1"></span>
+    </div>
+
 
     <div class="container-fluid mt-4">
         <div class="row">
             {{-- Left Sidebar --}}
             <div class="col-md-3">
                 {{-- Category Filter --}}
-                <label class="form-label">Category {{ $categories->count() }}</label>
+                <label class="form-label"> <strong> Category </strong> {{ $categories->count() }}</label>
                 <div class="mb-3">
                     @if ($categories->count() > 0)
                         <select class="form-select" name="category_id">
@@ -86,11 +91,81 @@
                             <input type="number" name="min_price" id ="min_price" class="form-control" placeholder="Min">
                             <input type="number" name="max_price" id ="max_price" class="form-control" placeholder="Max">
                             {{-- <h5 class="card-title">{{ $product->name }}</h5> --}}
-                            <input type="hidden" name ="product_name" id= "product_name" value="{{$query}}">
+                            <input type="hidden" name ="product_name" id= "product_name" value="{{ $query }}">
                             <span><button type="submit" class="btn btn-primary w-100">></button></span>
                         </div>
+
                     </div>
                 </form>
+
+
+                {{-- <div class="filter-section">
+
+                    <form id="salesFilterForm" action="{{ route('products.search') }}" method="GET">
+                        <input type="hidden" name ="product_name" id= "product_name" value="{{ $query }}">
+
+                        <div>
+                            <h5 class="form-label">On Sale</h5>
+                            <input type="checkbox" name="onsale[]" value="1">
+                            {{ in_array('1', request()->get('sales', [])) ? 'checked' : '' }}
+                            <label>yes</label>
+                            <br><br>
+                        </div>
+                        <h5>Sales</h5>
+                        <div>
+                            <input type="checkbox" name="sales[]" value="no sale"
+                                {{ in_array('no sale', request()->get('sales', [])) ? 'checked' : '' }}>
+                            <label>No Sales</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" name="sales[]" value="low"
+                                {{ in_array('low', request()->get('sales', [])) ? 'checked' : '' }}>
+                            <label>Low</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" name="sales[]" value="medium"
+                                {{ in_array('medium', request()->get('sales', [])) ? 'checked' : '' }}>
+                            <label>Medium</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" name="sales[]" value="high"
+                                {{ in_array('high', request()->get('sales', [])) ? 'checked' : '' }}>
+                            <label>High</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" name="sales[]" value="top sellers"
+                                {{ in_array('top sellers', request()->get('sales', [])) ? 'checked' : '' }}>
+                            <label>Top Sellers</label>
+                        </div>
+                    </form>
+                </div> --}}
+                <div class="filter-section">
+                    <form id="salesFilterForm" action="{{ route('products.search') }}" method="GET">
+                        <input type="hidden" name="product_name" id="product_name" value="{{ $query }}">
+
+                        <div>
+                            <h5 class="form-label">On Sale</h5>
+                            <input type="checkbox" name="onsale[]" value="1"
+                                {{ in_array('1', request()->get('onsale', [])) ? 'checked' : '' }}>
+                            <label>Yes</label>
+                            <br><br>
+                        </div>
+
+                        <h5>Sales</h5>
+                        @php
+                            $salesOptions = ['no sale', 'low', 'medium', 'high', 'top sellers'];
+                        @endphp
+
+                        @foreach ($salesOptions as $option)
+                            <div>
+                                <input type="checkbox" name="sales[]" value="{{ $option }}"
+                                    {{ in_array($option, request()->get('sales', [])) ? 'checked' : '' }}>
+                                <label>{{ ucfirst($option) }}</label>
+                            </div>
+                        @endforeach
+                    </form>
+                </div>
+
 
 
 
@@ -103,6 +178,11 @@
                 <div id="filtered-products" class="mt-4"></div>
 
                 {{-- Static Blade Rendered Products (only show if no AJAX response) --}}
+                <div id="search_sales_products" class="mt-4"></div>
+
+                {{-- <div id="search_on_sales_products" class="mt-4"></div> --}}
+
+
                 <div id="static-products" class="row">
 
                     @forelse($search_products as $index => $product)
@@ -186,31 +266,332 @@
     </section>
 @endsection
 
+
 @section('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+               <script>
+                function clearPriceFilter() {
+                    // Clear input values
+                    $('#min_price').val('');
+                    $('#max_price').val('');
+
+                    // Remove the badge
+                    $('#price-badge').remove();
+
+                    // Re-submit the form to reload filtered results
+                   $('#filter-form').trigger('submit');
+                }
+
+               function clearFilter(type) {
+                    if (type === 'onsale') {
+
+                        $('input[name="onsale[]"]').prop('checked', false);
+
+
+                        $('#onsale-badge').remove();
+                    }
+
+
+                    $('#salesFilterForm input[type="checkbox"]').trigger('change');
+                }
+
+              function clearSingleSales(value) {
+                    // Uncheck the checkbox
+                    $(`input[name="sales[]"][value="${value}"]`).prop('checked', false);
+
+                    // Remove the badge (optional if you added ID)
+                    let safeValue = value.replace(/\s+/g, '-');
+                    $(`#sales-badge-${safeValue}`).remove();
+
+                    // Trigger the AJAX filter
+                    $('#salesFilterForm input[type="checkbox"]').trigger('change');
+                }
+
+
+
+                </script>
+
     <script>
         $(document).ready(function() {
 
+
+
+            // $('#salesFilterForm input[type="checkbox"]').on('change', function() {
+
+            //     //     let form = $('#salesFilterForm');
+            //     //     let actionUrl = form.attr('action');
+
+            //     //     let formData = form.serialize();
+
+            //     //     $.ajax({
+
+            //     //         url: actionUrl,
+            //     //         type: 'GET',
+            //     //         data: formData,
+
+            //     //         success: function(response) {
+            //     //             let products = response.products;
+            //     //             let output = '';
+
+            //     //             if (products.length === 0) {
+            //     //                 output = '<p>No products found.</p>';
+            //     //             } else {
+            //     //                 $('#static-products').hide();
+            //     //                 $('#filtered-products').hide();
+
+            //     //                 for (let i = 0; i < products.length; i++) {
+            //     //                     // Start a new row for every 3 products
+            //     //                     if (i % 3 === 0) {
+            //     //                         output += '<div class="row mb-4">';
+            //     //                     }
+
+            //     //                     let product = products[i];
+            //     //                     let imageUrl = `/storage/${product.thumbnail}`;
+
+            //     //                     output += `
+        //     //                         <div class="col-md-4">
+        //     //                             <div class="card h-100 shadow-sm">
+        //     //                                 <img src="${imageUrl}" class="card-img-top" alt="${product.name}" style="height: 200px; object-fit: cover;">
+        //     //                                 <div class="card-body d-flex flex-column">
+        //     //                                     <h5 class="card-title">${product.name}</h5>
+        //     //                                     <p class="card-text">${product.description || ''}</p>
+        //     //                                     <div class="mt-auto">
+        //     //                                         <p class="fw-bold text-primary">$${product.regular_license_price}</p>
+        //     //                                         <button class="btn btn-outline-success w-100">
+        //     //                                             <i class="fas fa-cart-plus"></i> Add to Cart
+        //     //                                         </button>
+        //     //                                     </div>
+        //     //                                 </div>
+        //     //                             </div>
+        //     //                         </div>
+        //     //                     `;
+
+            //     //                     // Close the row after 3 products or at the end
+            //     //                     if ((i + 1) % 3 === 0 || i === products.length - 1) {
+            //     //                         output += '</div>';
+            //     //                     }
+            //     //                 }
+            //     //             }
+
+            //     //             $('#search_sales_products').html(output);
+            //     //         },
+            //     //         error: function(xhr) {
+            //     //             console.error('Error:', xhr.responseText);
+            //     //         }
+            //     //     });
+            // });
+
+            $('#salesFilterForm input[type="checkbox"]').on('change', function() {
+                let form = $('#salesFilterForm');
+                let actionUrl = form.attr('action');
+                let formData = form.serialize();
+
+                const startTime = performance.now();
+
+                $.ajax({
+                    url: actionUrl,
+                    type: 'GET',
+                    data: formData,
+                    success: function(response) {
+                        const endTime = performance.now();
+                        const responseTime = (endTime - startTime).toFixed(2);
+
+                        let products = response.products;
+                        let output = '';
+                        let filterBadges = [];
+
+                        // Onsale filters
+                        $('input[name="onsale[]"]:checked').each(function() {
+                            filterBadges.push(
+                                `<span class="badge bg-light text-dark border me-2">On Sale: Yes <span class="ms-1 text-danger" style="cursor:pointer;" onclick="clearFilter('onsale')">×</span></span>`
+                            );
+                        });
+
+                        // Sales filters
+                        $('input[name="sales[]"]:checked').each(function() {
+                            filterBadges.push(
+                                `<span class="badge bg-light text-dark border me-2">Sales: ${$(this).val()} <span class="ms-1 text-danger" style="cursor:pointer;" onclick="clearSingleSales('${$(this).val()}')">×</span></span>`
+                            );
+                        });
+
+                        // Response time badge
+                        filterBadges.push(
+
+                        );
+
+                        $('#relevant').html(filterBadges.join(' '));
+
+                        // Render Products
+                        if (products.length === 0) {
+                            output = '<p>No products found.</p>';
+                        } else {
+                            $('#static-products').hide();
+                            $('#filtered-products').hide(); // optional
+                            $('#search_sales_products').show();
+
+                            for (let i = 0; i < products.length; i++) {
+                                if (i % 3 === 0) output += '<div class="row mb-4">';
+
+                                let product = products[i];
+                                let imageUrl = `/storage/${product.thumbnail}`;
+
+                                output += `
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm">
+                                <img src="${imageUrl}" class="card-img-top" alt="${product.name}" style="height: 200px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">${product.name}</h5>
+                                    <p class="card-text">${product.description || ''}</p>
+                                    <div class="mt-auto">
+                                        <p class="fw-bold text-primary">$${product.regular_license_price}</p>
+                                        <button class="btn btn-outline-success w-100">
+                                            <i class="fas fa-cart-plus"></i> Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                                if ((i + 1) % 3 === 0 || i === products.length - 1) {
+                                    output += '</div>';
+                                }
+                            }
+                        }
+
+                        $('#search_sales_products').html(output);
+                    },
+                    error: function(xhr) {
+                        console.error('Error:', xhr.responseText);
+                    }
+                });
+            });
+
+
+
+
+            // $('#filter-form').on('submit', function(e) {
+            //     e.preventDefault();
+
+            //     //     //     let formData = $(this).serialize();
+
+            //     //     //     $.ajax({
+            //     //     //         url: "{{ route('filter.products') }}",
+            //     //     //         method: "GET",
+            //     //     //         data: formData,
+            //     //     //         success: function(response) {
+            //     //     //             let products = response.products;
+            //     //     //             let output = '';
+
+            //     //     //             if (products.length === 0) {
+            //     //     //                 output = '<p>No products found.</p>';
+            //     //     //             } else {
+            //     //     //                 $('#static-products').hide();
+            //     //     //                  $('#search_sales_products').show();
+
+            //     //     //                 for (let i = 0; i < products.length; i++) {
+            //     //     //                     // Start a new row for every 3 products
+            //     //     //                     if (i % 3 === 0) {
+            //     //     //                         output += '<div class="row mb-4">';
+            //     //     //                     }
+
+            //     //     //                     let product = products[i];
+            //     //     //                     let imageUrl = `/storage/${product.thumbnail}`;
+
+            //     //     //                     output += `
+        //     //     //                         <div class="col-md-4">
+        //     //     //                             <div class="card h-100 shadow-sm">
+        //     //     //                                 <img src="${imageUrl}" class="card-img-top" alt="${product.name}" style="height: 200px; object-fit: cover;">
+        //     //     //                                 <div class="card-body d-flex flex-column">
+        //     //     //                                     <h5 class="card-title">${product.name}</h5>
+        //     //     //                                     <p class="card-text">${product.description || ''}</p>
+        //     //     //                                     <div class="mt-auto">
+        //     //     //                                         <p class="fw-bold text-primary">$${product.regular_license_price}</p>
+        //     //     //                                         <button class="btn btn-outline-success w-100">
+        //         //     //                                             <i class="fas fa-cart-plus"></i> Add to Cart
+        //     //     //                                         </button>
+        //     //     //                                     </div>
+        //     //     //                                 </div>
+        //     //     //                             </div>
+        //     //     //                         </div>
+        //     //     //                     `;
+
+            //     //     //                     // Close the row after 3 products or at the end
+            //     //     //                     if ((i + 1) % 3 === 0 || i === products.length - 1) {
+            //     //     //                         output += '</div>';
+            //     //     //                     }
+            //     //     //                 }
+            //     //     //             }
+
+            //     //     //             $('#filtered-products').html(output);
+
+            //     //     //         },
+
+            //     //     //         error: function(xhr) {
+            //     //     //             console.error(xhr.responseText);
+            //     //     //             alert('Something went wrong.');
+            //     //     //         }
+            //     //     //     });
+            // });
 
             $('#filter-form').on('submit', function(e) {
                 e.preventDefault();
 
                 let formData = $(this).serialize();
 
+                const startTime = performance.now(); // Start timing
+
                 $.ajax({
                     url: "{{ route('filter.products') }}",
                     method: "GET",
                     data: formData,
                     success: function(response) {
+                        const endTime = performance.now(); // End timing
+                        const responseTime = (endTime - startTime).toFixed(2); // in ms
+
+                        // Show response time in console or UI
+                        console.log(`Response Time: ${responseTime} ms`);
+
+                        // Optional: Show response time in the UI
+                        $('#relevant1').append(`
+                            <span class="badge bg-info text-dark ms-2">
+                                // Response: ${responseTime} ms
+                            </span>
+                        `);
+
+                        // Continue with your existing logic...
                         let products = response.products;
                         let output = '';
+
+                        let minPrice = $('#min_price').val();
+                        let maxPrice = $('#max_price').val();
+                        let relevantHTML = '';
+
+                        if (minPrice || maxPrice) {
+                            let rangeText = '$';
+                            rangeText += minPrice ? minPrice : '0';
+                            rangeText += ' - $';
+                            rangeText += maxPrice ? maxPrice : '∞';
+
+                            relevantHTML += `
+                                <span class="badge bg-light text-dark border me-2">
+                                    price:
+                                    ${rangeText}
+
+                                    <span class="ms-1 text-danger" style="cursor:pointer;" onclick="clearPriceFilter()">×</span>
+                                </span>
+                            `;
+                        }
+
+                        $('#relevant1').html(relevantHTML);
 
                         if (products.length === 0) {
                             output = '<p>No products found.</p>';
                         } else {
                             $('#static-products').hide();
+                            $('#search_sales_products').show();
+
                             for (let i = 0; i < products.length; i++) {
-                                // Start a new row for every 3 products
                                 if (i % 3 === 0) {
                                     output += '<div class="row mb-4">';
                                 }
@@ -236,7 +617,6 @@
                                     </div>
                                 `;
 
-                                // Close the row after 3 products or at the end
                                 if ((i + 1) % 3 === 0 || i === products.length - 1) {
                                     output += '</div>';
                                 }
@@ -252,15 +632,6 @@
                     }
                 });
             });
-
-
-
-
-
-
-
-
-
 
 
 
