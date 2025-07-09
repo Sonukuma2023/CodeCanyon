@@ -89,35 +89,35 @@ class SearchController extends Controller
     //     }
     // }
 
-public function product_sale_search(Request $request)
-{
-    $query = Product::query();
+// public function product_sale_search(Request $request)
+// {
+//     $query = Product::query();
 
 
 
-    if ($request->filled('product_name')) {
-        $query->where('name', 'like', '%' . $request->product_name . '%');
-    }
+//     if ($request->filled('product_name')) {
+//         $query->where('name', 'like', '%' . $request->product_name . '%');
+//     }
 
 
-    if ($request->filled('sales') && $request->filled('on_sale')) {
-        $query->whereIn('sales', $request->sales)
-              ->where('on_sale', $request->onsale);
-    } elseif ($request->filled('sales')) {
+//     if ($request->filled('sales') && $request->filled('on_sale')) {
+//         $query->whereIn('sales', $request->sales)
+//               ->where('on_sale', $request->onsale);
+//     } elseif ($request->filled('sales')) {
 
-        $query->whereIn('sales', $request->sales);
+//         $query->whereIn('sales', $request->sales);
 
-    } elseif ($request->filled('onsale')) {
+//     } elseif ($request->filled('onsale')) {
 
-        $query->where('on_sale', $request->onsale);
+//         $query->where('on_sale', $request->onsale);
 
-    }
+//     }
 
 
-    $products = $query->get();
+//     $products = $query->get();
     
-       return response()->json(['products' => $products]);
-}
+//        return response()->json(['products' => $products]);
+// }
 
     public function filterProducts(Request $request)
     {
@@ -129,6 +129,14 @@ public function product_sale_search(Request $request)
 
         if ($request->filled('max_price')) {
             $query->where('regular_license_price', '<=', $request->max_price);
+        }
+
+        if($request->filled('onsale')){
+            $query->where('on_sale', '=', $request->onsale);
+        }
+
+        if ($request->filled('sales') && is_array($request->sales)) {
+            $query->whereIn('sales', $request->sales);
         }
 
         $products = $query->get();
@@ -161,7 +169,6 @@ public function product_sale_search(Request $request)
         if ($request->filled('max_price')) {
             $query->where('regular_license_price', '<=', (float) $request->max_price);
         }
-
 
         $products = $query->get();
 
