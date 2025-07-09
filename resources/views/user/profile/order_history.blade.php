@@ -12,6 +12,7 @@
                     <th>Total</th>
                     <th>Status</th>
                     <th>Date</th>
+                    <th>Action</th>
                 </tr>
             </thead>
         </table>
@@ -31,7 +32,8 @@ $(document).ready(function() {
             { data: 'products' },
             { data: 'total' },
             { data: 'status' },
-            { data: 'date' }
+            { data: 'date' },
+            { data: 'action'}
         ]
     });
 });

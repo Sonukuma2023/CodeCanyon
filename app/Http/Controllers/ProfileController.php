@@ -104,6 +104,7 @@ class ProfileController extends Controller
                 'total' => '$' . number_format($order->total, 2),
                 'status' => ucfirst($order->status),
                 'date' => $order->created_at->format('d M Y'),
+                'action' => '<a href="' . route('user.orderDetailsView', $order->id) . '" class="btn btn-sm btn-primary">View</a>',
             ];
         }
 
@@ -141,6 +142,7 @@ class ProfileController extends Controller
                 'product_name' => $product->name ?? 'N/A',
                 'price' => '$' . number_format($product->regular_license_price ?? 0, 2),
                 'added_on' => $item->created_at->format('d M Y'),
+                'action' => '<button class="btn btn-danger btn-sm remove-item" data-id="' . $item->id . '">Remove</button>',
             ];
         }
 
@@ -151,6 +153,28 @@ class ProfileController extends Controller
             "data" => $data,
         ]);
     }
+
+    public function deleteWishlist(Request $request)
+    {
+        $wishlistId = $request->input('id');
+
+        $wishlistItem = Whislist::find($wishlistId);
+
+        if (!$wishlistItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Wishlist item not found!'
+            ]);
+        }
+
+        $wishlistItem->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Wishlist deleted successfully.'
+        ]);
+    }
+
 
     public function userProfileEdit()
     {
@@ -186,6 +210,19 @@ class ProfileController extends Controller
             'message' => 'Profile updated successfully.'
         ]);
     }
+
+
+    public function orderDetailsView($id)
+    {
+        $categories = Category::latest()->get();
+        $products = Product::with('category')->latest()->get();
+        // view()->share('categories', $categories);
+        $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+        $order = Order::with(['items.product'])->where('user_id', auth()->id())->findOrFail($id);
+        return view('user.profile.order_view', compact('order','categories', 'products', 'navbarCategories'));
+    }
+
 
 
 

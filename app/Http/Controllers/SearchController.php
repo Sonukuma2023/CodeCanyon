@@ -69,27 +69,27 @@ class SearchController extends Controller
     }
 
 
-        return view('partials.search-results', compact('search_products', 'categories', 'query', 'navbarCategories'));
-    }
+    //     return view('partials.search-results', compact('search_products', 'categories', 'query', 'navbarCategories'));
+    // }
 
 
 
-    public function filterProducts(Request $request)
-    {
-        $product = Product::get();
-        if ($product) {
+    // public function filterProducts(Request $request)
+    // {
+    //     $product = Product::get();
+    //     if ($product) {
 
-            $product_search = Product::where('name', 'like', '%' . $request->product_name . '%')
-                ->whereBetween('regular_license_price', [$request->min_price, $request->max_price])
-                ->get();
+    //         $product_search = Product::where('name', 'like', '%' . $request->product_name . '%')
+    //             ->whereBetween('regular_license_price', [$request->min_price, $request->max_price])
+    //             ->get();
 
-            if ($product_search) {
-                return response()->json(['products' => $product_search]);
-            }
-        }
-    }
+    //         if ($product_search) {
+    //             return response()->json(['products' => $product_search]);
+    //         }
+    //     }
+    // }
 
-  public function product_sale_search(Request $request)
+public function product_sale_search(Request $request)
 {
     $query = Product::query();
 
@@ -154,15 +154,14 @@ class SearchController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
-
         if ($request->filled('min_price')) {
-            $query->where('regular_license_price', '>=', $request->min_price);
+            $query->where('regular_license_price', '>=', (float) $request->min_price);
         }
-
 
         if ($request->filled('max_price')) {
-            $query->where('regular_license_price', '<=', $request->max_price);
+            $query->where('regular_license_price', '<=', (float) $request->max_price);
         }
+
 
         $products = $query->get();
 
@@ -179,9 +178,6 @@ class SearchController extends Controller
 
         return view('user.partials.product-list', compact('products'))->render();
     }
-
-
-
 
 
     // public function product_on_sale_search(Request $request)
