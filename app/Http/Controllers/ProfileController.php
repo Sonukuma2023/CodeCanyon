@@ -104,6 +104,7 @@ class ProfileController extends Controller
                 'total' => '$' . number_format($order->total, 2),
                 'status' => ucfirst($order->status),
                 'date' => $order->created_at->format('d M Y'),
+                'action' => '<a href="' . route('user.orderDetailsView', $order->id) . '" class="btn btn-sm btn-primary">View</a>',
             ];
         }
 
@@ -209,6 +210,19 @@ class ProfileController extends Controller
             'message' => 'Profile updated successfully.'
         ]);
     }
+
+
+    public function orderDetailsView($id)
+    {
+        $categories = Category::latest()->get();
+        $products = Product::with('category')->latest()->get();
+        // view()->share('categories', $categories);
+        $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+        $order = Order::with(['items.product'])->where('user_id', auth()->id())->findOrFail($id);
+        return view('user.profile.order_view', compact('order','categories', 'products', 'navbarCategories'));
+    }
+
 
 
 

@@ -182,7 +182,7 @@
                 <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
             </div>
 
-            <div class="products-grid">
+            <!-- <div class="products-grid">
                 @foreach ($products as $product)
                     @if($product->status != 'pending')
                         <div class="product-card">
@@ -211,7 +211,6 @@
                                 </div>
 
                                 <div class="product-footer">
-                                    <!-- Product price -->
                                     <div class="price">${{ number_format($product->regular_license_price, 2) }}</div>
                                         <button class="addtocart" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
                                             <div class="pretext">
@@ -227,8 +226,69 @@
                         </div>
                     @endif
                 @endforeach
-            </div>
+            </div> -->
 
+
+            <div class="products-grid" id="product-wrapper">
+                @foreach ($products->take(4) as $product)
+                    @if($product->status != 'pending')
+                        @php
+                            $thumbnail = $product->thumbnail ? asset('storage/uploads/thumbnails/' . $product->thumbnail) : asset('storage/uploads/thumbnails/default-thumbnail.jpg');
+                            $isWishlisted = $product->wishlistedBy->contains(auth()->id());
+                        @endphp
+
+                        <div class="product-card position-relative">
+                            <!-- Wishlist Button -->
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <button type="button" class="btn btn-light btn-sm p-1 rounded-circle shadow-sm add-to-wishlist" data-id="{{ $product->id }}">
+                                <i class="bi bi-heart{{ $isWishlisted ? '-fill text-danger' : '' }}"></i>
+                                </button>
+                            </div>
+
+                            <div class="product-image">
+                                <img src="{{ $thumbnail }}" alt="{{ $product->name }}" loading="lazy">
+                                <a href="{{ route('user.singleproduct', $product->id) }}" class="quick-view" data-product-id="{{ $product->id }}" style="text-decoration: none; color: white;">
+                                    Quick View
+                                </a>
+                            </div>
+                            <div class="product-details">
+                                <h3 class="product-title">{{ $product->name }}</h3>
+                                <div class="product-author">by <a href="#">{{ $product->name }}</a></div>
+
+                                <div class="product-meta">
+                                    <div class="rating">
+                                        <div class="stars">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star-half-alt"></i>
+                                        </div>
+                                    </div>
+                                    <div class="sales">
+                                        <i class="fas fa-chart-line"></i> {{ $product->sales ?? '1200+' }} sales
+                                    </div>
+                                </div>
+
+                                <div class="product-footer">
+                                    <div class="price">${{ number_format($product->regular_license_price, 2) }}</div>
+                                    <button class="addtocart" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
+                                        <div class="pretext">
+                                            <i class="fas fa-cart-plus"></i> ADD TO CART
+                                        </div>
+                                        <div class="done">
+                                            <div class="posttext"><i class="fas fa-check"></i> ADDED</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+            <div class="text-center mt-4">
+                <button id="loadMoreBtn" class="btn btn-primary" data-page="1">Show More</button>
+            </div>
         </div>
     </section>
 
@@ -385,5 +445,38 @@ $(document).ready(function () {
 		markMessagesAsRead();
 	});
 });
+
+let page = 1;
+
+$('#loadMoreBtn').on('click', function () {
+    page++;
+
+    $.ajax({
+        url: "{{ route('user.loadMoreProducts') }}",
+        method: "POST",
+        data: {
+            _token: "{{ csrf_token() }}",
+            page: page
+        },
+        beforeSend: function () {
+            $('#loadMoreBtn').text('Loading...');
+        },
+        success: function (res) {
+            $('#product-wrapper').append(res.html);
+            if (!res.hasMore) {
+                $('#loadMoreBtn').hide();
+            } else {
+                $('#loadMoreBtn').text('Show More');
+            }
+        },
+        error: function () {
+            alert('Failed to load more products.');
+            $('#loadMoreBtn').text('Show More');
+        }
+    });
+});
+
+
+
 </script>
 @endsection

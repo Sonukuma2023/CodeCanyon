@@ -13,6 +13,7 @@ use App\Models\Notifications;
 use App\Models\Community;
 use App\Models\Coupons;
 use App\Models\Cart;
+use App\Models\Whislist;
 use App\Events\MessageSent;
 use App\Events\NotificationSent;
 use App\Events\CommunityCreated;
@@ -396,6 +397,93 @@ class UserController extends Controller
 			]
 		]);
 	}
+
+	public function loadMore(Request $request)
+	{
+		$perPage = 4;
+		$page = $request->page ?? 1;
+
+		$products = Product::where('status', '!=', 'pending')
+			->latest()
+			->skip(($page - 1) * $perPage)
+			->take($perPage + 1)
+			->get();
+
+		$hasMore = $products->count() > $perPage;
+		$products = $products->take($perPage);
+
+		$userId = auth()->id();
+		$wishlistIds = [];
+
+		if ($userId) {
+			$wishlistIds = Whislist::where('user_id', $userId)
+				->pluck('product_id')
+				->toArray();
+		}
+
+		$html = '';
+
+		foreach ($products as $product) {
+
+			$isWishlisted = in_array($product->id, $wishlistIds);
+			$wishlistIcon = $isWishlisted ? 'bi-heart-fill text-danger' : 'bi-heart';
+			
+			$html .= '
+			<div class="product-card position-relative">
+
+			<div class="position-absolute top-0 end-0 m-2">
+					<button type="button" class="btn btn-light btn-sm p-1 rounded-circle shadow-sm add-to-wishlist" data-id="' . $product->id . '">
+						<i class="bi ' . $wishlistIcon . '"></i>
+					</button>
+				</div>
+
+				<div class="product-image">
+					<img src="' . asset('storage/uploads/thumbnails/' . $product->thumbnail) . '" alt="' . $product->name . '" loading="lazy">
+					<a href="' . route('user.singleproduct', $product->id) . '" class="quick-view" data-product-id="' . $product->id . '">Quick View</a>
+				</div>
+
+				<div class="product-details">
+					<h3 class="product-title">' . $product->name . '</h3>
+					<div class="product-author">by <a href="#">' . $product->name . '</a></div>
+
+					<div class="product-meta">
+						<div class="rating">
+							<div class="stars">
+								<i class="fas fa-star"></i>
+								<i class="fas fa-star"></i>
+								<i class="fas fa-star"></i>
+								<i class="fas fa-star"></i>
+								<i class="fas fa-star-half-alt"></i>
+							</div>
+						</div>
+						<div class="sales">
+							<i class="fas fa-chart-line"></i> 1200+ sales
+						</div>
+					</div>
+
+					<div class="product-footer">
+						<div class="price">$' . number_format($product->regular_license_price, 2) . '</div>
+						<button class="addtocart" data-id="' . $product->id . '" data-price="' . $product->regular_license_price . '">
+							<div class="pretext">
+								<i class="fas fa-cart-plus"></i> ADD TO CART
+							</div>
+							<div class="done">
+								<div class="posttext"><i class="fas fa-check"></i> ADDED</div>
+							</div>
+						</button>
+					</div>
+				</div>
+			</div>';
+		}
+
+		return response()->json([
+			'html' => $html,
+			'hasMore' => $hasMore
+		]);
+	}
+
+
+
 
 		
 

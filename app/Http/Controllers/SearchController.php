@@ -89,7 +89,7 @@ class SearchController extends Controller
     //     }
     // }
 
-  public function product_sale_search(Request $request)
+public function product_sale_search(Request $request)
 {
     $query = Product::query();
 
@@ -155,13 +155,13 @@ class SearchController extends Controller
         }
 
         if ($request->filled('min_price')) {
-            $query->where('regular_license_price', '>=', $request->min_price);
+            $query->where('regular_license_price', '>=', (float) $request->min_price);
         }
-
 
         if ($request->filled('max_price')) {
-            $query->where('regular_license_price', '<=', $request->max_price);
+            $query->where('regular_license_price', '<=', (float) $request->max_price);
         }
+
 
         $products = $query->get();
 

@@ -27,6 +27,8 @@ class LoginController extends Controller
         if ($user && Hash::check($request->password, $user->password)) {
             Auth::login($user);
 
+            dd($user);
+
             // Redirect based on user role
             if ($user->role === 'admin') {
                 return redirect()->route('admin.dashboard');

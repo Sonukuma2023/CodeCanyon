@@ -86,8 +86,12 @@
 </div>
 @empty
 <div class="col-12">
-    <div class="alert alert-warning text-center">
-        No scripts available in this category.
+    <div class="alert alert-light border shadow-sm text-center py-5">
+        <div class="mb-3">
+            <i class="bi bi-emoji-frown display-4 text-warning"></i>
+        </div>
+        <h4 class="fw-semibold text-dark">No Scripts Found</h4>
+        <p class="text-muted mb-0">We're sorry, there are no scripts available in this category right now.</p>
     </div>
 </div>
 @endforelse
