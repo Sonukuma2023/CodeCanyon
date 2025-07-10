@@ -18,6 +18,8 @@ use App\Events\MessageSent;
 use App\Events\NotificationSent;
 use App\Events\CommunityCreated;
 use Illuminate\Support\Facades\Session;
+use App\Models\Collection;
+use App\Models\CollectionProduction;
 
 class UserController extends Controller
 {
@@ -481,6 +483,60 @@ class UserController extends Controller
 			'hasMore' => $hasMore
 		]);
 	}
+
+
+	public function addToCollection(Request $request)
+    {
+		$request->validate([
+            'product_id' => 'required|exists:products,id',
+        ]);
+
+        $user = Auth::user();
+
+		$collection = Collection::where('user_id', $user->id)->first();
+
+		if(!$collection){
+			return response()->json(['hasCollections' => false]);
+		}
+
+		$exists = CollectionProduction::where('collection_id', $collection->id)
+                ->where('product_id', $request->product_id)
+                ->exists();
+
+		if ($exists) {
+			return response()->json([
+				'status' => 'exists',
+				'message' => 'Product already exists in your collection.'
+			]);
+		}
+		
+        CollectionProduction::firstOrCreate([
+            'collection_id' => $collection->id,
+            'product_id' => $request->product_id,
+        ]);
+
+        return response()->json(['status' => 'success', 'message' => 'Product added to collection.']);
+    }
+
+    public function createCollection(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'product_id' => 'required|exists:products,id',
+        ]);
+
+        $collection = Collection::create([
+            'user_id' => Auth::id(),
+            'name' => $request->name,
+        ]);
+
+        CollectionProduction::create([
+            'collection_id' => $collection->id,
+            'product_id' => $request->product_id,
+        ]);
+
+        return response()->json(['message' => 'Collection created and product added.']);
+    }
 
 
 

@@ -21,6 +21,7 @@ use App\Events\MessageSent;
 use App\Events\CommunityCreated;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Coupons;
+use App\Models\Cart;
 
 class AdminController extends Controller
 {
@@ -931,5 +932,82 @@ class AdminController extends Controller
 
         return response()->json(['data' => $data]);
     }
+
+    public function usersCartPage(){
+        return view('admin.user_carts.list');
+    }
+
+    public function fetchUserCarts()
+    {
+        $carts = Cart::with('user', 'product')->latest()->get();
+
+        $data = $carts->map(function ($cart) {
+            return [
+                'cart_id' => $cart->id,
+                'user_name' => $cart->user->name ?? 'Guest',
+                'product_names' => $cart->product->name ?? 'N/A',
+                'total_quantity' => $cart->quantity ?? 1,
+                'price' => number_format($cart->price, 2),
+                'created_at_human' => $cart->created_at->diffForHumans(),
+                'actions' => '
+                    <a href="' . route('admin.showUserCarts', $cart->id) . '" class="btn btn-sm btn-info me-1">View</a>
+                    <a href="' . route('admin.editUserCarts', $cart->id) . '" class="btn btn-sm btn-warning me-1">Edit</a>
+                    <a href="#" class="btn btn-sm btn-danger me-1 remove-cart" 
+                    data-id="' . $cart->id . '" 
+                    data-href="' . route('admin.deleteUserCarts', $cart->id) . '">
+                    <i class="mdi mdi-delete"></i> Delete
+                    </a>'
+            ];
+        });
+
+        return response()->json(['data' => $data]);
+    }
+
+
+    public function showUserCarts($id)
+    {
+        $cart = Cart::with('user', 'product')->findOrFail($id);
+
+        return view('admin.user_carts.show', compact('cart'));
+    }
+
+    public function editUserCarts($id)
+    {
+        $cart = Cart::with('user', 'product')->findOrFail($id);
+
+        return view('admin.user_carts.edit', compact('cart'));
+    }
+
+    public function updateUserCarts(Request $request, $id)
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $cart = Cart::findOrFail($id);
+
+        $cart->quantity = $request->quantity;
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Cart updated successfully.',
+            'cart' => $cart
+        ]);
+    }
+
+    public function deleteUserCarts($id)
+    {
+        $cart = Cart::findOrFail($id);
+        $cart->delete();
+
+        return response()->json([
+            'message' => 'Cart deleted successfully.'
+        ]);
+    }
+
+
+
+
+
 
 }

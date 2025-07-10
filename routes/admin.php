@@ -75,6 +75,15 @@ Route::middleware(['auth', 'role:admin'])
             Route::delete('/{id}', [AdminController::class, 'deleteCoupons'])->name('deleteCoupons');
             Route::get('/edit/{id}', [AdminController::class, 'editCoupon'])->name('editCoupon');
             Route::put('/edit/{id}', [AdminController::class, 'updateCoupon'])->name('updateCoupon');
+        }); 
+        
+        Route::prefix('user/cart')->group(function () {
+            Route::get('/data', [AdminController::class, 'fetchUserCarts'])->name('fetchUserCarts');
+            Route::get('/list', [AdminController::class, 'usersCartPage'])->name('usersCartPage');
+            Route::get('/show/{id}', [AdminController::class, 'showUserCarts'])->name('showUserCarts');
+            Route::get('/edit/{id}', [AdminController::class, 'editUserCarts'])->name('editUserCarts');
+            Route::put('/edit/{id}', [AdminController::class, 'updateUserCarts'])->name('updateUserCarts');
+            Route::delete('/delete/{id}', [AdminController::class, 'deleteUserCarts'])->name('deleteUserCarts');
         });
 
         // Route::get('single/{name}/{slug}', [AdminController::class, 'single_categories_details'])->name('single.category');

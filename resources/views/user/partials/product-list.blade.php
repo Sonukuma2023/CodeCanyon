@@ -18,6 +18,14 @@
                 <button class="position-absolute top-0 end-0 m-2 btn btn-sm bg-white rounded-circle shadow-sm add-to-wishlist" data-id="{{ $product->id }}">
                     <i class="wishlist-icon bi {{ $product->is_wishlisted ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
                 </button>
+
+                <button class="position-absolute bottom-0 start-0 m-2 btn btn-sm bg-white rounded-circle shadow-sm add-to-collection" 
+                        data-id="{{ $product->id }}" 
+                        title="Add to Collection" 
+                        id="collection-btn-{{ $product->id }}">
+                    <i class="bi bi-collection"></i>
+                </button>
+
             </div>
 
             <div class="card-body d-flex flex-column">
@@ -59,7 +67,6 @@
             </div>
         </div>
     </div>
-
 @empty
 <div class="col-12">
     <div class="alert alert-light border shadow-sm text-center py-5">
@@ -72,6 +79,34 @@
 </div>
 @endforelse
 </div>
+
+<!-- Modal -->
+    <div class="modal fade" id="collectionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="createCollectionForm" class="modal-content">
+                @csrf
+                <input type="hidden" name="product_id" id="collectionProductId">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Collection</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="collectionError" class="text-danger mb-2"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Collection Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Create & Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
 <style>
 .card {
     transition: transform 0.2s ease;
@@ -82,5 +117,21 @@
 .badge {
     font-size: 0.75rem;
     padding: 0.35em 0.6em;
+}
+@keyframes collectionPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+        background-color: #d1e7dd;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.collection-animate {
+    animation: collectionPulse 0.5s ease-in-out;
 }
 </style>
