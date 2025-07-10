@@ -65,6 +65,7 @@
                         <li><a class="dropdown-item" href="{{ route('user.OrderHistory') }}"><i class="bi bi-bag-check me-2"></i>Order History</a></li>
                         <li><a class="dropdown-item" href="{{ route('user.ProfileEdit') }}"><i class="bi bi-person-lines-fill me-2"></i>Profile</a></li>
                         <li><a class="dropdown-item" href="{{ route('user.wishlistPage') }}"><i class="bi bi-heart-fill me-2"></i>Wishlist</a></li>
+                       <li><a class="dropdown-item" href="{{ route('user.myCollectionsPage') }}"><i class="bi bi-collection me-2"></i>Product Collections</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form action="{{ route('user.logout') }}" method="POST">

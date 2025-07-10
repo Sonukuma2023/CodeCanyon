@@ -104,9 +104,18 @@ Route::middleware(['auth', 'role:user'])
         Route::prefix('user')->group(function () {
             Route::get('/profile', [ProfileController::class, 'userProfileEdit'])->name('user.ProfileEdit');
             Route::post('/profile', [ProfileController::class, 'userProfileUpdate'])->name('user.ProfileUpdate');
+
+            Route::get('/collection/page', [ProfileController::class, 'myCollectionsPage'])->name('user.myCollectionsPage');
+            Route::get('/collection/data', [ProfileController::class, 'fetchCollectionItems'])->name('user.fetchCollectionItems');
+            Route::post('/collection/delete/{id}', [ProfileController::class, 'deleteCollectionProduct'])->name('user.deleteCollectionProduct');
         });
         
         Route::post('/load/products', [UserController::class, 'loadMore'])->name('user.loadMoreProducts');
+
+        Route::post('/add-to-collection', [UserController::class, 'addToCollection'])->name('user.addToCollection');
+        Route::post('/create-collection', [UserController::class, 'createCollection'])->name('user.createCollection');
+
+
 
     });
 

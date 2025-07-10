@@ -12,6 +12,8 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Whislist;
+use App\Models\Collection;
+use App\Models\CollectionProduction;
 
 class ProfileController extends Controller
 {
@@ -222,6 +224,50 @@ class ProfileController extends Controller
         $order = Order::with(['items.product'])->where('user_id', auth()->id())->findOrFail($id);
         return view('user.profile.order_view', compact('order','categories', 'products', 'navbarCategories'));
     }
+
+    public function myCollectionsPage()
+    {
+        $categories = Category::latest()->get();
+        $products = Product::with('category')->latest()->get();
+        // view()->share('categories', $categories);
+        $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+        return view('user.profile.collections', compact('categories', 'products', 'navbarCategories'));
+    }
+
+    public function fetchCollectionItems(Request $request)
+    {
+        $userId = Auth::id();
+
+        $collections = Collection::where('user_id', $userId)->pluck('id');
+
+        $data = CollectionProduction::with('product')
+            ->whereIn('collection_id', $collections)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->product->id,
+                    'product_name' => $item->product->name,
+                    'price' => '$' . number_format($item->product->regular_license_price, 2),
+                    'added_on' => $item->created_at->format('d M Y'),
+                    'action' => '<button class="btn btn-danger btn-sm remove-item" data-id="'.$item->id.'" data-href="' . route('user.deleteCollectionProduct', $item->id) . '">Remove</button>',
+                ];
+            });
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function deleteCollectionProduct(Request $request)
+    {
+        $item = CollectionProduction::find($request->id);
+        if ($item && $item->collection->user_id === Auth::id()) {
+            $item->delete();
+            return response()->json(['success' => true, 'message' => 'Product removed from collection.']);
+        }
+        return response()->json(['success' => false, 'message' => 'Unauthorized or not found.']);
+    }
+
+
 
 
 
