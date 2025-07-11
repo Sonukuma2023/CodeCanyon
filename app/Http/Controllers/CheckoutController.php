@@ -47,7 +47,7 @@ class CheckoutController extends Controller
         });
 
         $discount = 0;
-        $tax = round($subtotal * 0.18, 2);
+        $tax = round($subtotal * 0.18, precision: 2);
 
         $couponCode = $request->input('applied_coupon_code');
         $coupon = null;

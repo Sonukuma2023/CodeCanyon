@@ -7,12 +7,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\Review;
 use App\Models\Messages;
 use App\Models\Notifications;
 use App\Models\Community;
 use App\Models\Coupons;
 use App\Models\Cart;
+use App\Models\UserReview;
 use App\Events\MessageSent;
 use App\Events\NotificationSent;
 use App\Events\CommunityCreated;
@@ -25,7 +25,11 @@ class UserController extends Controller
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-        return view('user.dashboard', compact('categories', 'products', 'navbarCategories',));
+		$reviewsByProduct = UserReview::where('user_id', auth()->id())->get()->groupBy('product_id');
+
+		 
+		 
+        return view('user.dashboard', compact('categories', 'products', 'navbarCategories','reviewsByProduct'));
     }
 
     public function singleproduct($id) {

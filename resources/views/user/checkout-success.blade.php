@@ -1,16 +1,18 @@
 @extends('user.layouts.master')
 
 @section('content')
-<div class="container mt-5">
-    @if($order->payment_status === 'paid')
+ 
+ 
+<div class="container mt-5" >
+    @if($order->payment_status === 'paid' ||  $order->payment_status === 'COMPLETED')
     <div class="card shadow-sm p-4 border-success">
         <!-- Animated Success Checkmark -->
         <div class="text-center mb-4">
             <div class="success-animation">
-                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <!--<svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
                     <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
                     <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                </svg>
+                </svg>-->
             </div>
         </div>
         
@@ -89,6 +91,42 @@
     </div>
     @endif
 </div>
+@if($order->payment_status === 'paid' || $order->payment_status === 'COMPLETED')
+<!-- Review & Rating Modal -->
+<div class="modal fade" id="reviewModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+       <form id="reviewForm" method="POST" action="{{ route('submit.review') }}">
+            @csrf
+            <input type="hidden" name="order_id" value="{{ $order->id }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rate Your Order</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 text-center">
+                        <label class="form-label d-block">Your Rating</label>
+                        <div class="star-rating">
+                            @for ($i = 1; $i <= 5; $i++)
+                                <i class="star bi bi-star-fill" data-value="{{ $i }}"></i>
+                            @endfor
+                            <input type="hidden" name="rating" id="ratingValue" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="review" class="form-label">Write a Review</label>
+                        <textarea name="review" class="form-control" rows="3" placeholder="Share your experience..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="submit" class="btn btn-success">Submit Review</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
+
 
 @if($order->payment_status === 'paid')
 <style>
@@ -202,5 +240,111 @@
         }
     }
 </style>
+<style>
+    .star-rating {
+        font-size: 2.2rem;
+        color: #ccc;
+        cursor: pointer;
+    }
+
+    .star-rating .star.selected {
+        color: gold;
+    }
+
+    .star-rating .star {
+        transition: color 0.2s;
+    }
+</style>
+
+
+ 
+
+ 
 @endif
+ <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const modal = new bootstrap.Modal(document.getElementById('reviewModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+
+        const stars = document.querySelectorAll('.star-rating .star');
+        const ratingInput = document.getElementById('ratingValue');
+
+        stars.forEach((star, index) => {
+            star.addEventListener('click', function () {
+                const rating = this.getAttribute('data-value');
+                ratingInput.value = rating;
+
+                stars.forEach(s => s.classList.remove('selected'));
+                for (let i = 0; i < rating; i++) {
+                    stars[i].classList.add('selected');
+                }
+            });
+        });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+         
+        $('.star').on('click', function () {
+            const value = $(this).data('value');
+            $('#ratingValue').val(value);
+            $('.star').removeClass('text-warning');
+            $(this).prevAll().addBack().addClass('text-warning');
+        });
+
+        
+        $('#reviewForm').on('submit', function (e) {
+            e.preventDefault();  
+
+            const form = $(this);
+            const actionUrl = form.attr('action');
+            const formData = form.serialize();
+
+            $.ajax({
+                url: actionUrl,
+                method: 'POST',
+                data: formData,
+                success: function (response) {
+
+                    if (response.redirect_url) {
+                        window.location.href = response.redirect_url;
+                    } else {
+                        alert(response.message);
+                    }
+                },
+              error: function (xhr) {
+                    const response = xhr.responseJSON;
+
+                    if (xhr.status === 409 && response?.error && response?.redirect_url) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Already Reviewed',
+                            text: response.error,
+                            confirmButtonText: 'Go to Order'
+                        }).then(() => {
+                            window.location.href = response.redirect_url;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response?.error || 'Something went wrong.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+
+            });
+        });
+    });
+</script>
+
+
+
+
+
+
 @endsection

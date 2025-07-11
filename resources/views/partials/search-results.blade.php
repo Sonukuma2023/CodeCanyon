@@ -56,6 +56,49 @@
                 width: auto;
             }
         }
+            /* ********************************************? */
+             .filter-toggle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .filter-chevron {
+        transition: transform 0.2s;
+        font-size: 14px;
+        color: #999;
+    }
+
+    .filter-chevron.rotate {
+        transform: rotate(180deg);
+    }
+
+    .filter-content {
+        display: none;
+        margin-top: 8px;
+    }
+
+    .filter-content.active {
+        display: block;
+    }
+
+    .checkbox-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 10px;
+    }
+
+
+
+
+
+
+
+
     </style>
     <div id="container" style="text-align: center;">
         <span id="relevant"></span>
@@ -99,47 +142,99 @@
                 </form>
 
 
-                {{-- <div class="filter-section">
+                <div class="filter-section">
 
                     <form id="salesFilterForm" action="{{ route('products.search') }}" method="GET">
-                        <input type="hidden" name ="product_name" id= "product_name" value="{{ $query }}">
 
-                        <div>
-                            <h5 class="form-label">On Sale</h5>
-                            <input type="checkbox" name="onsale[]" value="1">
-                            {{ in_array('1', request()->get('sales', [])) ? 'checked' : '' }}
-                            <label>yes</label>
+                        <input type="hidden" name ="product_name" id= "product_name" value="{{ $query }}">
+                           <input type="hidden" name="min_price" id ="min_price" class="form-control" placeholder="Min" value="10">
+                            <input type="hidden" name="max_price" id ="max_price" class="form-control" placeholder="Max" value="12">
+
+
+                            <div class="filter-toggle" onclick="toggleFilter(this)">
+                                <h5 class="form-label" style="margin: 0;">On Sale</h5>
+                                <span class="filter-chevron">&#9650;</span> <!-- ^ icon -->
+                            </div>
+
+                            <div class="filter-content">
+                                <div style="display: flex; align-items: center; gap: 5px; margin-top: 10px;">
+                                    <input type="checkbox" name="onsale[]" value="1"
+                                        {{ in_array('1', request()->get('sales', [])) ? 'checked' : '' }}>
+
+                                    <label class="checkbox-line">
+                                        <span>Yes</span>
+                                        <span>{{ $total_on_sale }}</span>
+                                    </label>
+                                </div>
+                            </div>
                             <br><br>
-                        </div>
-                        <h5>Sales</h5>
-                        <div>
-                            <input type="checkbox" name="sales[]" value="no sale"
-                                {{ in_array('no sale', request()->get('sales', [])) ? 'checked' : '' }}>
-                            <label>No Sales</label>
-                        </div>
-                        <div>
-                            <input type="checkbox" name="sales[]" value="low"
-                                {{ in_array('low', request()->get('sales', [])) ? 'checked' : '' }}>
-                            <label>Low</label>
-                        </div>
-                        <div>
-                            <input type="checkbox" name="sales[]" value="medium"
-                                {{ in_array('medium', request()->get('sales', [])) ? 'checked' : '' }}>
-                            <label>Medium</label>
-                        </div>
-                        <div>
-                            <input type="checkbox" name="sales[]" value="high"
-                                {{ in_array('high', request()->get('sales', [])) ? 'checked' : '' }}>
-                            <label>High</label>
-                        </div>
-                        <div>
-                            <input type="checkbox" name="sales[]" value="top sellers"
-                                {{ in_array('top sellers', request()->get('sales', [])) ? 'checked' : '' }}>
-                            <label>Top Sellers</label>
-                        </div>
+                            <!-- ***************************************************************************************** -->
+                            <!-- Sales Filter Section -->
+                            <div class="filter-section">
+                                <div class="filter-toggle" onclick="toggleFilter(this)">
+                                    <h5 class="form-label" style="margin: 0;">Sales</h5>
+                                    <span class="filter-chevron">&#9650;</span>
+                                </div>
+
+                                <div class="filter-content">
+                                    <!-- No Sale -->
+                                    <div style="display: flex; align-items: center; gap: 5px; margin-top: 10px;">
+                                        <input type="checkbox" name="sales[]" value="no sale"
+                                            {{ in_array('no sale', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>No Sales</span>
+                                            <span>{{ $total_no_sale }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Low -->
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" name="sales[]" value="low"
+                                            {{ in_array('low', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>Low</span>
+                                            <span>{{ $total_low }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Medium -->
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" name="sales[]" value="medium"
+                                            {{ in_array('medium', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>Medium</span>
+                                            <span>{{ $total_medium }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- High -->
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" name="sales[]" value="high"
+                                            {{ in_array('high', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>High</span>
+                                            <span>{{ $total_high }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Top Sellers -->
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" name="sales[]" value="top sellers"
+                                            {{ in_array('top sellers', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>Top Sellers</span>
+                                            <span>{{ $total_top_seller }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+  
+
+
+                        
                     </form>
-                </div> --}}
-                <div class="filter-section">
+                </div> 
+                <!-- <div class="filter-section">
                     <form id="salesFilterForm" action="{{ route('products.search') }}" method="GET">
                         <input type="hidden" name="product_name" id="product_name" value="{{ $query }}">
 
@@ -164,7 +259,7 @@
                             </div>
                         @endforeach
                     </form>
-                </div>
+                </div> -->
 
 
 
@@ -188,7 +283,7 @@
                     @forelse($search_products as $index => $product)
                         <div class="col-md-4 mb-4">
                             <div class="card h-100 shadow-sm">
-                                <img src="{{ asset('storage/' . $product->thumbnail) }}" class="card-img-top"
+                                <img src="{{ asset('storage/uploads/thumbnails/' . $product->thumbnail) }}" class="card-img-top"
                                     alt="{{ $product->name }}" style="height: 200px; object-fit: cover;">
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title">{{ $product->name }}</h5>
@@ -268,6 +363,15 @@
 
 
 @section('scripts')
+    <script>
+        function toggleFilter(element) {
+            const content = element.nextElementSibling;
+            const chevron = element.querySelector('.filter-chevron');
+
+            content.classList.toggle('active');
+            chevron.classList.toggle('rotate');
+        }
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
                <script>
                 function clearPriceFilter() {
@@ -382,9 +486,13 @@
             // });
 
             $('#salesFilterForm input[type="checkbox"]').on('change', function() {
+               
+                
                 let form = $('#salesFilterForm');
                 let actionUrl = form.attr('action');
                 let formData = form.serialize();
+                
+                 
 
                 const startTime = performance.now();
 
@@ -433,8 +541,8 @@
                                 if (i % 3 === 0) output += '<div class="row mb-4">';
 
                                 let product = products[i];
-                                let imageUrl = `/storage/${product.thumbnail}`;
-
+                                let imageUrl = `/storage/${product.thumbnails}`;
+                                 
                                 output += `
                         <div class="col-md-4">
                             <div class="card h-100 shadow-sm">
@@ -568,6 +676,7 @@
                         let relevantHTML = '';
 
                         if (minPrice || maxPrice) {
+
                             let rangeText = '$';
                             rangeText += minPrice ? minPrice : '0';
                             rangeText += ' - $';
@@ -624,6 +733,7 @@
                         }
 
                         $('#filtered-products').html(output);
+
                     },
 
                     error: function(xhr) {
@@ -631,6 +741,21 @@
                         alert('Something went wrong.');
                     }
                 });
+                 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             });
 
 

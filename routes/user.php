@@ -8,7 +8,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ProfileController;
-
+ 
 
 Route::middleware(['auth', 'role:user'])
     ->name('user.')
@@ -86,7 +86,7 @@ Route::middleware(['auth', 'role:user'])
         Route::get('/wishlist/data', [ProfileController::class, 'fetchWishlistItems'])->name('user.fetchWishlistItems');
         Route::get('/user/profile', [ProfileController::class, 'userProfileEdit'])->name('user.ProfileEdit');
         Route::post('/user/profile', [ProfileController::class, 'userProfileUpdate'])->name('user.ProfileUpdate');
-
+    
     });
 
 
