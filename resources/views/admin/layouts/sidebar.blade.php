@@ -141,6 +141,16 @@
                 <span class="menu-title">Reviews</span>
             </a>
         </li>
+
+        <li class="nav-item menu-items">
+            <a class="nav-link" href="{{ route('admin.userCollectionsPage') }}">
+                <span class="menu-icon">
+                    <i class="mdi mdi-account-multiple"></i>
+                </span>
+                <span class="menu-title">User Collections</span>
+            </a>
+        </li>
+
         
     </ul>
 </nav>

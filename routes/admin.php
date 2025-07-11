@@ -86,6 +86,12 @@ Route::middleware(['auth', 'role:admin'])
             Route::delete('/delete/{id}', [AdminController::class, 'deleteUserCarts'])->name('deleteUserCarts');
         });
 
+        Route::prefix('user/collection')->group(function () {
+            Route::get('/data', [AdminController::class, 'fetchUserCollections'])->name('fetchUserCollections');
+            Route::get('/list', [AdminController::class, 'userCollectionsPage'])->name('userCollectionsPage');
+            Route::delete('/delete/{id}', [AdminController::class, 'deleteUserCollections'])->name('deleteUserCollections');
+            Route::get('/show/{id}', [AdminController::class, 'showAllUserCollections'])->name('showAllUserCollections');
+        });
         // Route::get('single/{name}/{slug}', [AdminController::class, 'single_categories_details'])->name('single.category');
 
     });
