@@ -105,6 +105,16 @@
             </a>
         </li>
 
+        <li class="nav-item menu-items">
+            <a class="nav-link" href="{{ route('admin.usersCartPage') }}">
+                <span class="menu-icon">
+                    <i class="mdi mdi-cart-outline"></i>
+                </span>
+                <span class="menu-title">Users Cart</span>
+            </a>
+        </li>
+
+
 
         <li class="nav-item menu-items">
             <a class="nav-link" data-toggle="collapse" href="#ui-coupons" aria-expanded="false" aria-controls="ui-basic">
@@ -118,6 +128,7 @@
                 <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link" href="{{ route('admin.couponAddPage') }}">Add Coupons</a></li>
                 <li class="nav-item"> <a class="nav-link" href="{{ route('admin.couponsPage') }}">View All</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{ route('admin.showUsedCoupons') }}">View Used Coupons</a></li>
                 </ul>
             </div>
         </li>

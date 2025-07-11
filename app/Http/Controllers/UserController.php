@@ -13,10 +13,13 @@ use App\Models\Notifications;
 use App\Models\Community;
 use App\Models\Coupons;
 use App\Models\Cart;
+use App\Models\Whislist;
 use App\Events\MessageSent;
 use App\Events\NotificationSent;
 use App\Events\CommunityCreated;
 use Illuminate\Support\Facades\Session;
+use App\Models\Collection;
+use App\Models\CollectionProduction;
 
 class UserController extends Controller
 {
@@ -40,7 +43,7 @@ class UserController extends Controller
             ->where('product_id', $product->id)
             ->latest()
             ->get();
-        
+
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
         return view('user.singleproduct', compact('product', 'relatedProducts', 'navbarCategories', 'reviews'));
     }
@@ -69,7 +72,7 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'Review submitted successfully.');
     }
-	
+
 	public function messagePage()
 	{
 		$categories = Category::latest()->get();
@@ -78,7 +81,7 @@ class UserController extends Controller
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
 		return view('user.messages', compact('categories', 'products', 'navbarCategories',));
 	}
-	
+
 	public function fetchMessages(Request $request)
 	{
 		try {
@@ -103,8 +106,8 @@ class UserController extends Controller
 			return response()->json(['error' => 'Server error'], 500);
 		}
 	}
-	
-	
+
+
 	public function messageSave(Request $request)
 	{
 		$request->validate([
@@ -114,29 +117,29 @@ class UserController extends Controller
 		$message = Messages::create([
 			'sender_id'   => auth()->id(),
 			'receiver_id' => 12,
-			'message'     => $request->message_content,	
+			'message'     => $request->message_content,
 			'sent_at'     => now(),
 		]);
-		
+
 		$url = route('admin.messagePage',['id' => auth()->user()->id ]);
-		
+
 		$notification = Notifications::create([
 			'sender_id'   => auth()->id(),
-			'receiver_id' => 12, 
+			'receiver_id' => 12,
 			'content'     => 'New message from: ' . auth()->user()->name,
 			'url'         => $url,
 			'sent_at'     => now(),
 		]);
-		
+
 		event(new MessageSent($message));
 		event(new NotificationSent($notification));
-		
+
 		return response()->json([
 			'success' => true,
 			'message' => 'Message and notification saved successfully'
 		]);
 	}
-	
+
 	public function markMessagesAsRead()
 	{
 		Messages::where('receiver_id', auth()->id())
@@ -145,17 +148,17 @@ class UserController extends Controller
 
 		return response()->json(['status' => 'success']);
 	}
-	
+
 	public function scriptRunnerPage()
 	{
 		$categories = Category::latest()->get();
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-		
+
 		return view('user.script-runner', compact('categories', 'products', 'navbarCategories',));
 	}
-	
+
 	public function runScript(Request $request)
 	{
 		$code = trim($request->input('code'));
@@ -187,18 +190,18 @@ class UserController extends Controller
 			'output' => $code
 		]);
 	}
-	
+
 	public function communityPage()
 	{
 		$categories = Category::latest()->get();
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-		
+
 		return view('user.community', compact('categories', 'products', 'navbarCategories',));
 	}
-	
-	
+
+
 	public function createCommunity(Request $request)
 	{
 		$request->validate([
@@ -207,11 +210,11 @@ class UserController extends Controller
 		]);
 
 		$community = Community::create([
-			'user_id' => auth()->id(), 
+			'user_id' => auth()->id(),
 			'comment' => $request->comment,
 			'complaint' => $request->complaint,
 		]);
-		
+
 		event(new CommunityCreated($community));
 
 		return response()->json([
@@ -220,17 +223,17 @@ class UserController extends Controller
 			'data' => $community
 		]);
 	}
-	
+
 	public function communityList()
 	{
 		$categories = Category::latest()->get();
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-		
+
 		return view('user.community-list', compact('categories', 'products', 'navbarCategories',));
 	}
-	
+
 
 	public function fetchCommunityList()
 	{
@@ -248,32 +251,56 @@ class UserController extends Controller
 
 		return response()->json($communities);
 	}
-	
 
-	public function showCategoryProducts($slug)
+
+	// public function showCategoryProducts($slug)
+	// {
+	// 	$categories = Category::latest()->get();
+    //     $products = Product::with('category')->latest()->get();
+    //     // view()->share('categories', $categories);
+    //     $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+	// 	$category = Category::where('name', $slug)->firstOrFail();
+	// 	$products = $category->products()->latest()->get();
+
+	// 	return view('user.category-products', compact('category', 'products', 'categories', 'products', 'navbarCategories'));
+	// }
+
+	public function showCategoryProducts($slug, Request $request)
 	{
+		$category = Category::where('name', $slug)->firstOrFail();
 		$categories = Category::latest()->get();
 		$navbarCategories = Category::orderBy('created_at', 'asc')->get();
 
-		$category = Category::where('name', $slug)->firstOrFail();
+		$query = $category->products()->with(['category', 'wishlistedBy'])->latest();
 
-		$products = $category->products()->with('wishlistedBy')->latest()->get();
+		if ($request->filled('min_price')) {
+			$query->where('regular_license_price', '>=', $request->min_price);
+		}
 
-		if (auth()->check()) {
-			$userWishlist = auth()->user()->wishlist->pluck('id')->toArray();
+		if ($request->filled('max_price')) {
+			$query->where('regular_license_price', '<=', $request->max_price);
+		}
 
-			$products->each(function ($product) use ($userWishlist) {
-				$product->is_wishlisted = in_array($product->id, $userWishlist);
-			});
-		} else {
-			$products->each(function ($product) {
-				$product->is_wishlisted = false;
-			});
+		// if ($request->filled('rating')) {
+		// 	$query->where('rating', '>=', $request->rating);
+		// }
+
+		$products = $query->get();
+
+		// Mark each product as wishlisted
+		$products->each(function ($product) {
+			$product->is_wishlisted = auth()->check() && $product->wishlistedBy->contains(auth()->id());
+		});
+
+		if ($request->ajax()) {
+			$html = view('user.partials.product-cards', compact('products'))->render();
+			return response()->json(['html' => $html]);
 		}
 
 		return view('user.category-products', compact('category', 'products', 'categories', 'navbarCategories'));
 	}
-
+	
 
 	public function addWhislist(Request $request)
 	{
@@ -360,8 +387,6 @@ class UserController extends Controller
 		$tax = $subtotal * 0.1;
 		$total = ($subtotal + $tax) - $discount;
 
-		Session::put('applied_coupon_id', $coupon->id);
-
 		return response()->json([
 			'success' => true,
 			'message' => 'Coupon applied successfully!',
@@ -374,6 +399,147 @@ class UserController extends Controller
 			]
 		]);
 	}
+
+	public function loadMore(Request $request)
+	{
+		$perPage = 4;
+		$page = $request->page ?? 1;
+
+		$products = Product::where('status', '!=', 'pending')
+			->latest()
+			->skip(($page - 1) * $perPage)
+			->take($perPage + 1)
+			->get();
+
+		$hasMore = $products->count() > $perPage;
+		$products = $products->take($perPage);
+
+		$userId = auth()->id();
+		$wishlistIds = [];
+
+		if ($userId) {
+			$wishlistIds = Whislist::where('user_id', $userId)
+				->pluck('product_id')
+				->toArray();
+		}
+
+		$html = '';
+
+		foreach ($products as $product) {
+
+			$isWishlisted = in_array($product->id, $wishlistIds);
+			$wishlistIcon = $isWishlisted ? 'bi-heart-fill text-danger' : 'bi-heart';
+			
+			$html .= '
+			<div class="product-card position-relative">
+
+			<div class="position-absolute top-0 end-0 m-2">
+					<button type="button" class="btn btn-light btn-sm p-1 rounded-circle shadow-sm add-to-wishlist" data-id="' . $product->id . '">
+						<i class="bi ' . $wishlistIcon . '"></i>
+					</button>
+				</div>
+
+				<div class="product-image">
+					<img src="' . asset('storage/uploads/thumbnails/' . $product->thumbnail) . '" alt="' . $product->name . '" loading="lazy">
+					<a href="' . route('user.singleproduct', $product->id) . '" class="quick-view" data-product-id="' . $product->id . '">Quick View</a>
+				</div>
+
+				<div class="product-details">
+					<h3 class="product-title">' . $product->name . '</h3>
+					<div class="product-author">by <a href="#">' . $product->name . '</a></div>
+
+					<div class="product-meta">
+						<div class="rating">
+							<div class="stars">
+								<i class="fas fa-star"></i>
+								<i class="fas fa-star"></i>
+								<i class="fas fa-star"></i>
+								<i class="fas fa-star"></i>
+								<i class="fas fa-star-half-alt"></i>
+							</div>
+						</div>
+						<div class="sales">
+							<i class="fas fa-chart-line"></i> 1200+ sales
+						</div>
+					</div>
+
+					<div class="product-footer">
+						<div class="price">$' . number_format($product->regular_license_price, 2) . '</div>
+						<button class="addtocart" data-id="' . $product->id . '" data-price="' . $product->regular_license_price . '">
+							<div class="pretext">
+								<i class="fas fa-cart-plus"></i> ADD TO CART
+							</div>
+							<div class="done">
+								<div class="posttext"><i class="fas fa-check"></i> ADDED</div>
+							</div>
+						</button>
+					</div>
+				</div>
+			</div>';
+		}
+
+		return response()->json([
+			'html' => $html,
+			'hasMore' => $hasMore
+		]);
+	}
+
+
+	public function addToCollection(Request $request)
+    {
+		$request->validate([
+            'product_id' => 'required|exists:products,id',
+        ]);
+
+        $user = Auth::user();
+
+		$collection = Collection::where('user_id', $user->id)->first();
+
+		if(!$collection){
+			return response()->json(['hasCollections' => false]);
+		}
+
+		$exists = CollectionProduction::where('collection_id', $collection->id)
+                ->where('product_id', $request->product_id)
+                ->exists();
+
+		if ($exists) {
+			return response()->json([
+				'status' => 'exists',
+				'message' => 'Product already exists in your collection.'
+			]);
+		}
+		
+        CollectionProduction::firstOrCreate([
+            'collection_id' => $collection->id,
+            'product_id' => $request->product_id,
+        ]);
+
+        return response()->json(['status' => 'success', 'message' => 'Product added to collection.']);
+    }
+
+    public function createCollection(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'product_id' => 'required|exists:products,id',
+        ]);
+
+        $collection = Collection::create([
+            'user_id' => Auth::id(),
+            'name' => $request->name,
+        ]);
+
+        CollectionProduction::create([
+            'collection_id' => $collection->id,
+            'product_id' => $request->product_id,
+        ]);
+
+        return response()->json(['message' => 'Collection created and product added.']);
+    }
+
+
+
 
 		
 
