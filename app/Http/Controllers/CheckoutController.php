@@ -22,9 +22,7 @@ class CheckoutController extends Controller
         $cartItems = Cart::with('product')->where('user_id', auth()->id())->get();
 
         if ($cartItems->isEmpty()) {
-            return redirect()
-                ->route('dashboard')
-                ->with('error', 'Your cart is empty. Please add products before checking out.');
+            return response()->json(['error' => 'Your cart is empty. Please add products before checking out.'], 422);
         }
 
         // 2) Validate inputs
@@ -39,6 +37,8 @@ class CheckoutController extends Controller
             'country'        => 'required|string',
             'payment_method' => 'required|in:card,cod',
             'stripe_token'   => 'required_if:payment_method,card',
+            'final_total'          => 'required|numeric|min:0',
+            'applied_coupon_code'  => 'nullable|string|exists:coupons,code',
         ]);
 
         // 3) Calculate order totals
@@ -48,11 +48,27 @@ class CheckoutController extends Controller
 
         $discount = 0;
         $tax = round($subtotal * 0.18, 2);
+
+        $couponCode = $request->input('applied_coupon_code');
+        $coupon = null;
+        $discount = 0;
+
+        if ($couponCode) {
+            $coupon = Coupons::where('code', $couponCode)
+                            ->where('status', 'active')
+                            ->first();
+            if ($coupon) {
+                $discount = $coupon->discount_percentage ?? 0;
+            }
+        }
+
         $total = $subtotal - $discount + $tax;
+
+        $frontendTotal = round((float) $request->input('final_total'), 2);
 
         if ($validatedData['payment_method'] === 'card') {
             // 4) Process Stripe payment
-            $amountInCents = round($total * 100); // in cents
+            $amountInCents = round($total * 100);
 
             try {
                 Stripe::setApiKey(env('STRIPE_SECRET'));
@@ -66,7 +82,7 @@ class CheckoutController extends Controller
                 $stripeTransactionId = $charge->id;
                 $paymentStatus = 'paid';
             } catch (\Exception $e) {
-                return back()->with('error', 'Payment failed: ' . $e->getMessage());
+                return response()->json(['error' => 'Payment failed: ' . $e->getMessage()], 422);
             }
 
             // 5) Create order + items within DB transaction
@@ -85,11 +101,12 @@ class CheckoutController extends Controller
                     'subtotal'       => $subtotal,
                     'discount'       => $discount,
                     'tax'            => $tax,
-                    'total'          => $total,
+                    'total'          => $frontendTotal,
                     'payment_method' => 'card',
                     'payment_status' => $paymentStatus,
                     'status'         => 'processing',
                     'transaction_id' => $stripeTransactionId,
+                    'coupon_code' => $couponCode,
                 ]);
 
                 foreach ($cartItems as $item) {
@@ -102,26 +119,21 @@ class CheckoutController extends Controller
                     ]);
                 }
 
-                $couponId = Session::get('applied_coupon_id');
-                if ($couponId) {
-                    $coupon = Coupons::find($couponId);
-                    if ($coupon) {
-                        if (!is_null($coupon->usage_limit) && $coupon->usage_limit > 0) {
-                            $coupon->decrement('usage_limit');
+                if ($coupon) {
+                    if (!is_null($coupon->usage_limit) && $coupon->usage_limit > 0) {
+                        $coupon->decrement('usage_limit');
 
-                            if ($coupon->usage_limit <= 1) {
-                                $coupon->status = 'expired';
-                                $coupon->save();
-                            }
+                        if ($coupon->usage_limit <= 0) {
+                            $coupon->status = 'expired';
+                            $coupon->save();
                         }
-
-                        UserCoupons::create([
-                            'user_id'  => Auth::id(),
-                            'coupon_id' => $coupon->id,
-                            'order_id' => $order->id,
-                        ]);
                     }
-                    
+
+                    UserCoupons::create([
+                        'user_id'   => Auth::id(),
+                        'coupon_id' => $coupon->id,
+                        'order_id'  => $order->id,
+                    ]);
                 }
 
                 DB::commit();
@@ -132,19 +144,13 @@ class CheckoutController extends Controller
                 // Optionally refund payment here:
                 // \Stripe\Refund::create(['charge' => $stripeTransactionId]);
 
-                return back()->with('error', 'Order creation failed; your payment has been refunded.');
+                return response()->json(['error' => 'Order creation failed; your payment has been refunded.'], 500);
             }
 
-            if (Session::has('applied_coupon_id')) {
-                Session::forget('applied_coupon_id');
-            }
-
-            // 6) Clear cart and redirect with order ID in URL
             session()->forget('cart');
             Cart::where('user_id', auth()->id())->delete();
 
-            return redirect()
-                ->route('checkout.success', ['order' => $order->id]);
+            return response()->json(['success' => true, 'redirect_url' => route('checkout.success', ['order' => $order->id])]);
         }
 
         // 7) Payment method = COD
@@ -183,13 +189,13 @@ class CheckoutController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('COD Order creation failed: ' . $e->getMessage());
-            return back()->with('error', 'Error processing your order: ' . $e->getMessage());
+           return response()->json(['error' => 'Error processing your order: ' . $e->getMessage()], 500);
         }
 
         session()->forget('cart');
         Cart::where('user_id', auth()->id())->delete();
         
-        return redirect()->route('checkout.success', ['order_id' => $order->id]);
+        return response()->json(['success' => true, 'redirect_url' => route('checkout.success', ['order_id' => $order->id])]);
 
     }
 

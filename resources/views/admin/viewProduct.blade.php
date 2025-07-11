@@ -33,14 +33,14 @@
                     <td>${{ number_format($product->extended_license_price, 2) }}</td>
                     <td>
                         @if($product->thumbnail)
-                            <img src="{{ asset('storage/' . $product->thumbnail) }}" width="80" alt="Thumbnail">
+                            <img src="{{ asset('storage/uploads/thumbnails/' . $product->thumbnail) }}" width="80" alt="Thumbnail">
                         @else
                             N/A
                         @endif
                     </td>
                     <td>
                         @if($product->inline_preview)
-                            <img src="{{ asset('storage/' . $product->inline_preview) }}" width="80" alt="Inline Preview">
+                            <img src="{{ asset('storage/uploads/thumbnails/' . $product->inline_preview) }}" width="80" alt="Inline Preview">
                         @else
                             N/A
                         @endif
@@ -52,13 +52,13 @@
 
                         @if($mainFiles)
                             @foreach($mainFiles as $file)
-                                <a href="{{ asset('storage/' . $file) }}" target="_blank" class="btn btn-sm btn-outline-primary mb-1">Download</a><br>
+                                <a href="{{ asset($file) }}" target="_blank" download class="btn btn-sm btn-outline-primary mb-1">Download</a><br>
                             @endforeach
                         @else
                             N/A
                         @endif
                     </td>
-                    <td>
+                    <!-- <td>
                         @php
                             $previewFiles = is_array($product->preview) ? $product->preview : json_decode($product->preview, true);
                         @endphp
@@ -83,7 +83,45 @@
                         @else
                             N/A
                         @endif
-                    </td>
+                    </td> -->
+                <td>
+                    @php
+                        $previewFiles = is_array($product->preview) ? $product->preview : json_decode($product->preview, true);
+                    @endphp
+
+                    @if(!empty($previewFiles))
+                        @foreach($previewFiles as $file)
+                            <a href="{{ asset($file) }}" 
+                            download 
+                            target="_blank" 
+                            class="btn btn-sm btn-outline-success mb-1">
+                            Download Preview {{ $loop->iteration }}
+                            </a><br>
+                        @endforeach
+                    @else
+                        N/A
+                    @endif
+                </td>
+
+                <td>
+                    @php
+                        $livePreviewFiles = is_array($product->live_preview) ? $product->live_preview : json_decode($product->live_preview, true);
+                    @endphp
+
+                    @if(!empty($livePreviewFiles))
+                        @foreach($livePreviewFiles as $file)
+                            <a href="{{ asset($file) }}" 
+                            download 
+                            target="_blank" 
+                            class="btn btn-sm btn-outline-warning mb-1">
+                            Download Live {{ $loop->iteration }}
+                            </a><br>
+                        @endforeach
+                    @else
+                        N/A
+                    @endif
+                </td>
+
                     <td>
                         @if ($product->user_id == 1)
                             <span class="badge bg-success text-light" style="width:100%;">Admin</span>

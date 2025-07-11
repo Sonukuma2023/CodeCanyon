@@ -13,7 +13,7 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white d-flex align-items-center justify-content-between">
+            <div class="eadercard-h bg-white d-flex align-items-center justify-content-between">
                 <h5 class="mb-0 text-primary">
                     <i class="bi bi-chat-dots-fill me-2 text-info"></i>
                     Community Complaints

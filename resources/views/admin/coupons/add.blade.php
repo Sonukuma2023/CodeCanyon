@@ -13,12 +13,6 @@
             </div>
 
             <div class="col-md-6">
-                <label for="discount_amount" class="form-label">Discount Amount (₹)</label>
-                <input type="number" name="discount_amount" id="discount_amount" class="form-control" step="0.01" placeholder="Fixed amount (Optional)">
-                <div class="text-danger error-discount_amount"></div>
-            </div>
-
-            <div class="col-md-6">
                 <label for="discount_percentage" class="form-label">Discount Percentage (%)</label>
                 <input type="number" name="discount_percentage" id="discount_percentage" class="form-control" placeholder="Percentage (Optional)">
                 <div class="text-danger error-discount_percentage"></div>
