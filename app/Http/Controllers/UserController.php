@@ -7,19 +7,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\Review;
 use App\Models\Messages;
 use App\Models\Notifications;
 use App\Models\Community;
 use App\Models\Coupons;
 use App\Models\Cart;
-use App\Models\Whislist;
+use App\Models\UserReview;
 use App\Events\MessageSent;
 use App\Events\NotificationSent;
 use App\Events\CommunityCreated;
 use Illuminate\Support\Facades\Session;
-use App\Models\Collection;
-use App\Models\CollectionProduction;
 
 class UserController extends Controller
 {
@@ -28,7 +25,11 @@ class UserController extends Controller
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-        return view('user.dashboard', compact('categories', 'products', 'navbarCategories',));
+		$reviewsByProduct = UserReview::where('user_id', auth()->id())->get()->groupBy('product_id');
+
+		 
+		 
+        return view('user.dashboard', compact('categories', 'products', 'navbarCategories','reviewsByProduct'));
     }
 
     public function singleproduct($id) {
@@ -282,9 +283,9 @@ class UserController extends Controller
 			$query->where('regular_license_price', '<=', $request->max_price);
 		}
 
-		// if ($request->filled('rating')) {
-		// 	$query->where('rating', '>=', $request->rating);
-		// }
+		if ($request->filled('rating')) {
+			$query->where('rating', '>=', $request->rating);
+		}
 
 		$products = $query->get();
 
@@ -294,7 +295,7 @@ class UserController extends Controller
 		});
 
 		if ($request->ajax()) {
-			$html = view('user.partials.product-cards', compact('products'))->render();
+			$html = view('user.product-cards', compact('products'))->render();
 			return response()->json(['html' => $html]);
 		}
 
@@ -399,147 +400,6 @@ class UserController extends Controller
 			]
 		]);
 	}
-
-	public function loadMore(Request $request)
-	{
-		$perPage = 4;
-		$page = $request->page ?? 1;
-
-		$products = Product::where('status', '!=', 'pending')
-			->latest()
-			->skip(($page - 1) * $perPage)
-			->take($perPage + 1)
-			->get();
-
-		$hasMore = $products->count() > $perPage;
-		$products = $products->take($perPage);
-
-		$userId = auth()->id();
-		$wishlistIds = [];
-
-		if ($userId) {
-			$wishlistIds = Whislist::where('user_id', $userId)
-				->pluck('product_id')
-				->toArray();
-		}
-
-		$html = '';
-
-		foreach ($products as $product) {
-
-			$isWishlisted = in_array($product->id, $wishlistIds);
-			$wishlistIcon = $isWishlisted ? 'bi-heart-fill text-danger' : 'bi-heart';
-			
-			$html .= '
-			<div class="product-card position-relative">
-
-			<div class="position-absolute top-0 end-0 m-2">
-					<button type="button" class="btn btn-light btn-sm p-1 rounded-circle shadow-sm add-to-wishlist" data-id="' . $product->id . '">
-						<i class="bi ' . $wishlistIcon . '"></i>
-					</button>
-				</div>
-
-				<div class="product-image">
-					<img src="' . asset('storage/uploads/thumbnails/' . $product->thumbnail) . '" alt="' . $product->name . '" loading="lazy">
-					<a href="' . route('user.singleproduct', $product->id) . '" class="quick-view" data-product-id="' . $product->id . '">Quick View</a>
-				</div>
-
-				<div class="product-details">
-					<h3 class="product-title">' . $product->name . '</h3>
-					<div class="product-author">by <a href="#">' . $product->name . '</a></div>
-
-					<div class="product-meta">
-						<div class="rating">
-							<div class="stars">
-								<i class="fas fa-star"></i>
-								<i class="fas fa-star"></i>
-								<i class="fas fa-star"></i>
-								<i class="fas fa-star"></i>
-								<i class="fas fa-star-half-alt"></i>
-							</div>
-						</div>
-						<div class="sales">
-							<i class="fas fa-chart-line"></i> 1200+ sales
-						</div>
-					</div>
-
-					<div class="product-footer">
-						<div class="price">$' . number_format($product->regular_license_price, 2) . '</div>
-						<button class="addtocart" data-id="' . $product->id . '" data-price="' . $product->regular_license_price . '">
-							<div class="pretext">
-								<i class="fas fa-cart-plus"></i> ADD TO CART
-							</div>
-							<div class="done">
-								<div class="posttext"><i class="fas fa-check"></i> ADDED</div>
-							</div>
-						</button>
-					</div>
-				</div>
-			</div>';
-		}
-
-		return response()->json([
-			'html' => $html,
-			'hasMore' => $hasMore
-		]);
-	}
-
-
-	public function addToCollection(Request $request)
-    {
-		$request->validate([
-            'product_id' => 'required|exists:products,id',
-        ]);
-
-        $user = Auth::user();
-
-		$collection = Collection::where('user_id', $user->id)->first();
-
-		if(!$collection){
-			return response()->json(['hasCollections' => false]);
-		}
-
-		$exists = CollectionProduction::where('collection_id', $collection->id)
-                ->where('product_id', $request->product_id)
-                ->exists();
-
-		if ($exists) {
-			return response()->json([
-				'status' => 'exists',
-				'message' => 'Product already exists in your collection.'
-			]);
-		}
-		
-        CollectionProduction::firstOrCreate([
-            'collection_id' => $collection->id,
-            'product_id' => $request->product_id,
-        ]);
-
-        return response()->json(['status' => 'success', 'message' => 'Product added to collection.']);
-    }
-
-    public function createCollection(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'product_id' => 'required|exists:products,id',
-        ]);
-
-        $collection = Collection::create([
-            'user_id' => Auth::id(),
-            'name' => $request->name,
-        ]);
-
-        CollectionProduction::create([
-            'collection_id' => $collection->id,
-            'product_id' => $request->product_id,
-        ]);
-
-        return response()->json(['message' => 'Collection created and product added.']);
-    }
-
-
-
 
 		
 

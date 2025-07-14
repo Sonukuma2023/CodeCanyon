@@ -95,9 +95,13 @@
                                 </label>
                             @endforeach
                             @error('payment_method')<div class="text-danger">{{ $message }}</div>@enderror
+
+                                
+
+
                         </div>
 
-                        <div id="stripe-card-element" class="{{ $selectedPayment !== 'card' ? 'd-none' : '' }}">
+                         <div id="stripe-card-element" class="{{ $selectedPayment !== 'card' ? 'd-none' : '' }}">
                             <div class="mb-3">
                                 <label class="form-label">Card Details</label>
                                 <div id="card-element" class="form-control"></div>
@@ -105,7 +109,70 @@
                             </div>
                         </div>
 
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="paypal-checkbox">
+                            <label class="form-check-label" for="paypal-checkbox">Pay with PayPal</label>
+                        </div> 
+                        <!-- ***************************new code here? -->
+
+                                <!-- <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="pay-with-card" value="{{ $method['id'] }}" checked>
+                                <label class="form-check-label" for="pay-with-card">Pay stripe</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="pay-with-paypal" value="paypal">
+                                <label class="form-check-label" for="pay-with-paypal">Pay with PayPal</label>
+                            </div> -->
+
+                             
+
+
+
+
+
+
+                        <!-- ******************************************************* -->
+
+                        <div id="paypal-container" class="d-none">
+                            <!-- PayPal Section -->
+                            <div class="container">
+                                <div class="row mt-5 mb-5">
+                                    <div class="col-10 offset-1 mt-5">
+                                        <div class="card">
+                                            <div class="card-header bg-primary">
+                                                <h3 class="text-white">Laravel PayPal</h3>
+                                            </div>
+                                            <div class="card-body">
+                                                @if ($message = Session::get('success'))
+                                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                                </div>
+                                                @endif
+
+                                                @if ($message = Session::get('error'))
+                                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                                </div>
+                                                @endif
+
+                                                <center>
+                                                    <a href="{{ route('paypal.payment') }}" class="btn btn-success">Pay with PayPal</a>
+                                                </center>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <input type="hidden" name="stripe_token" id="stripe_token">
+
+            
+                        
+         
                 </div>
             </div>
 
@@ -154,6 +221,7 @@
                     <!-- Hidden fields -->
                     <input type="hidden" name="final_total" id="final_total" value="{{ $total }}">
                     <input type="hidden" name="applied_coupon_code" id="applied_coupon_code" value="">
+                    <input type="hidden" name="tax" id="tax" value="{{ number_format($tax, 2) }}">
 
                     <div class="input-group mb-4">
                         <input type="text" name="coupon_code" id="coupon_code_input" class="form-control" placeholder="Coupon code (optional)">
@@ -161,6 +229,9 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary">Complete Order</button>
+
+                    <button type="submit" class="btn btn-danger pay-with-pal" style="display:none;">Complete Order</button>
+
 
                     <div class="text-center mt-3 text-muted small">
                         <i class="fas fa-lock me-1 text-success"></i> Secure checkout
@@ -175,7 +246,10 @@
 @endsection
 
 @section('scripts')
+ 
+
 <script>
+
 function applyCoupon() {
     const couponCode = document.getElementById('coupon_code_input').value;
 
@@ -248,5 +322,90 @@ function submitViaAjax() {
         }
     });
 }
+// 88888888888888888888888888888888888888888888888888888888888888888888888888
+ $(document).ready(function() {
+    $('#paypal-checkbox').change(function() {
+            if ($(this).is(':checked')) {
+                // Show the PayPal button, hide the regular button
+                $('.pay-with-pal').show();
+                $('#stripe-card-element').hide();
+                $('#coupon_code_input').hide();
+                $('.btn-primary').not('.pay-with-pal').hide();
+            }   
+            else {
+                // Hide the PayPal button, show the regular button
+                $('.pay-with-pal').hide();
+                $('#coupon_code_input').show();
+                $('#stripe-card-element').show();
+                $('.btn-primary').not('.pay-with-pal').show();
+            }
+        });
+
+ 
+    $('.pay-with-pal').click(function(e) {
+        e.preventDefault();  
+
+            var first_name = $('#first_name').val();
+            var last_name = $('#last_name').val();
+            var email = $('#email').val();
+            var address = $('#address').val();
+            var tax = $('#tax').val();
+            var applied_coupon_code = $('#applied_coupon_code').val();
+            var city = $('#city').val();
+            var zip = $('#zip').val();
+            var country = $('#country').val();
+            var final_total = $('#final_total').val();
+
+        
+            var form_data = {
+                first_name: first_name,
+                last_name: last_name,
+                email: email,
+                address: address,
+                city: city,
+                zip: zip,
+                country: country,
+                final_total:final_total,
+                paymentMethod: 'paypal',
+                tax:tax,
+                applied_coupon_code:applied_coupon_code
+            };
+        $.ajax({
+
+            url: '{{ route('paypal.payment') }}',  
+            method: 'POST',
+            data: form_data,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+           
+            beforeSend: function() {
+                 
+                $('.pay-with-pal').prop('disabled', true).text('Processing...');
+            },
+            success: function(response) {
+                if (response.approval_url) {
+                    // Redirect to PayPal for approval
+                    window.location.href = response.approval_url;
+                } else if (response.success && response.redirect_url) {
+                    // Redirect to checkout success page after successful payment
+                    window.location.href = response.redirect_url;
+                } else {
+                    alert('Unexpected response from server.');
+                }
+            },
+            error: function(xhr, status, error) {
+                 
+                console.log(status, error);
+                alert('An error occurred while processing your request.');
+            },
+            complete: function() {
+                $('.pay-with-pal').prop('disabled', false).text('Complete Order');
+            }
+        });
+    });
+});
+
+
 </script>
 @endsection

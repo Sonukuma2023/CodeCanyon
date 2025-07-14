@@ -57,7 +57,79 @@
     }
 
 }
+.addtocart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em 1.2em;
+    border-radius: 25px;
+    border: none;
+    font-size: 0.9rem;
+    background: #0652DD;
+    color: #fff;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+    min-width: auto;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.addtocart:hover {
+    transform: scale(1.05);
+}
+
+.addtocart .pretext {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.addtocart.added .pretext {
+    opacity: 0;
+}
+
+.addtocart .done {
+    position: absolute;
+    inset: 0;
+    background: #38c172;
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    color: #fff;
+}
+
+.addtocart.added .done {
+    transform: translateX(0);
+}
+
+.addtocart .posttext {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.fa-cart-plus, .fa-check {
+    margin-right: 6px;
+    font-size: 0.9rem;
+}
+
+    
+
 </style>
+
     <section class="hero">
         <div class="container">
             <div class="col-md-6">
@@ -182,7 +254,7 @@
                 <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
             </div>
 
-            <!-- <div class="products-grid">
+            <div class="products-grid">
                 @foreach ($products as $product)
                     @if($product->status != 'pending')
                         <div class="product-card">
@@ -193,24 +265,35 @@
 
                             <div class="product-details">
                                 <h3 class="product-title">{{ $product->name }}</h3>
+                               
                                 <div class="product-author">by <a href="#">{{ $product->name }}</a></div>
 
                                 <div class="product-meta">
-                                    <div class="rating">
-                                        <div class="stars">
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star-half-alt"></i>
-                                        </div>
+                                        @php
+                                            $userReviews = $reviewsByProduct[$product->id] ?? collect();
+                                            $rating = $userReviews->first()->rating ?? 0;
+                                        @endphp
+                                        @if($rating > 0)
+                                            @for($i = 1; $i <= $rating; $i++)
+                                                <i class="fas fa-star text-warning"></i>
+                                            @endfor
+                                            @for($j = $rating + 1; $j <= 5; $j++)
+                                                <i class="far fa-star text-muted"></i> {{-- empty star --}}
+                                            @endfor
+                                        @else
+                                            <span>No reviews</span>
+                                        @endif
+                                
+                                    <div class="check Check_product">
+                                        <button class="btn btn-success addToRatingBtn1" data-id="{{ $product->id }}">Add to Rating</button>
                                     </div>
-                                    <div class="sales">
-                                        <i class="fas fa-chart-line"></i> 1200+ sales
-                                    </div>
+
+
+
                                 </div>
 
                                 <div class="product-footer">
+                                    <!-- Product price -->
                                     <div class="price">${{ number_format($product->regular_license_price, 2) }}</div>
                                         <button class="addtocart" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
                                             <div class="pretext">
@@ -220,77 +303,50 @@
                                             <div class="done">
                                                 <div class="posttext"><i class="fas fa-check"></i> ADDED</div>
                                             </div>
+                                            
                                         </button>
                                     </div>
                             </div>
                         </div>
                     @endif
                 @endforeach
-            </div> -->
-
-
-            <div class="products-grid" id="product-wrapper">
-                @foreach ($products->take(4) as $product)
-                    @if($product->status != 'pending')
-                        @php
-                            $thumbnail = $product->thumbnail ? asset('storage/uploads/thumbnails/' . $product->thumbnail) : asset('storage/uploads/thumbnails/default-thumbnail.jpg');
-                            $isWishlisted = $product->wishlistedBy->contains(auth()->id());
-                        @endphp
-
-                        <div class="product-card position-relative">
-                            <!-- Wishlist Button -->
-                            <div class="position-absolute top-0 end-0 m-2">
-                                <button type="button" class="btn btn-light btn-sm p-1 rounded-circle shadow-sm add-to-wishlist" data-id="{{ $product->id }}">
-                                <i class="bi bi-heart{{ $isWishlisted ? '-fill text-danger' : '' }}"></i>
-                                </button>
-                            </div>
-
-                            <div class="product-image">
-                                <img src="{{ $thumbnail }}" alt="{{ $product->name }}" loading="lazy">
-                                <a href="{{ route('user.singleproduct', $product->id) }}" class="quick-view" data-product-id="{{ $product->id }}" style="text-decoration: none; color: white;">
-                                    Quick View
-                                </a>
-                            </div>
-                            <div class="product-details">
-                                <h3 class="product-title">{{ $product->name }}</h3>
-                                <div class="product-author">by <a href="#">{{ $product->name }}</a></div>
-
-                                <div class="product-meta">
-                                    <div class="rating">
-                                        <div class="stars">
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star-half-alt"></i>
-                                        </div>
-                                    </div>
-                                    <div class="sales">
-                                        <i class="fas fa-chart-line"></i> {{ $product->sales ?? '1200+' }} sales
-                                    </div>
-                                </div>
-
-                                <div class="product-footer">
-                                    <div class="price">${{ number_format($product->regular_license_price, 2) }}</div>
-                                    <button class="addtocart" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
-                                        <div class="pretext">
-                                            <i class="fas fa-cart-plus"></i> ADD TO CART
-                                        </div>
-                                        <div class="done">
-                                            <div class="posttext"><i class="fas fa-check"></i> ADDED</div>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                @endforeach
             </div>
-            <div class="text-center mt-4">
-                <button id="loadMoreBtn" class="btn btn-primary" data-page="1">Show More</button>
-            </div>
+
         </div>
     </section>
+     <div class="modal fade" id="reviewModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="reviewForm" method="POST" action="{{ route('submit.review') }}">
+                @csrf
+                <input type="hidden" name="order_id" id="order_id" value="">
+                <input type="hidden" name="product_id" id="product_id" value="">
+                
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Rate Your Order</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 text-center">
+                            <label class="form-label d-block">Your Rating</label>
+                            <div class="star-rating">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <i class="star bi bi-star-fill" data-value="{{ $i }}" style="cursor: pointer; font-size: 24px;"></i>
+                                @endfor
+                                <input type="hidden" name="rating" id="ratingValue" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="review" class="form-label">Write a Review</label>
+                            <textarea name="review" class="form-control" rows="3" placeholder="Share your experience..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="submit" class="btn btn-success">Submit Review</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
 	@auth
 		<!-- Floating Chat Button -->
@@ -342,8 +398,209 @@
 @endsection
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+ 
+
+
+
+<!-- ***************************************new code *********************************** -->
 <script>
+
+$('.star').on('click', function () {
+    const rating = $(this).data('value');
+    $('#ratingValue').val(rating);
+
+    $('.star').each(function () {
+        const value = $(this).data('value');
+        if (value <= rating) {
+            $(this).addClass('text-warning');
+        } else {
+            $(this).removeClass('text-warning');
+        }
+    });
+});
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const modalElement = document.getElementById('reviewModal');
+        // const modal = new bootstrap.Modal(modalElement, {
+        //     backdrop: 'static',
+        //     keyboard: false
+        // });
+
+        // Show modal when button is clicked
+        // document.getElementById('addToRatingBtn').addEventListener('click', function () {
+        //     modal.show();
+        // });
+
+        // Handle star selection
+        const stars = document.querySelectorAll('.star-rating .star');
+        const ratingInput = document.getElementById('ratingValue');
+
+        stars.forEach((star, index) => {
+            star.addEventListener('click', function () {
+                const rating = this.getAttribute('data-value');
+                ratingInput.value = rating;
+
+                stars.forEach(s => s.classList.remove('text-warning'));
+                for (let i = 0; i < rating; i++) {
+                    stars[i].classList.add('text-warning');
+                }
+            });
+        });
+    });
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        $('#reviewForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const actionUrl = form.attr('action');
+            const formData = form.serialize();
+
+            $.ajax({
+                url: actionUrl,
+                method: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.redirect_url) {
+                        window.location.href = response.redirect_url;
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Review Submitted',
+                            text: response.message || 'Thank you for your feedback!',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    const response = xhr.responseJSON;
+
+                    if (xhr.status === 409 && response?.error && response?.redirect_url) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Already Reviewed',
+                            text: response.error,
+                            confirmButtonText: 'Go to Order'
+                        }).then(() => {
+                            window.location.href = response.redirect_url;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response?.error || 'Something went wrong.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+            });
+        });
+    });
+</script>
+
+
+
+<!-- **********************************new _code******************************************* -->
+<script>
+
 $(document).ready(function () {
+    
+    // $('.addToRatingBtn1').on('click', function (e) {
+    //         e.preventDefault();
+
+    //        const productId = $(this).data('id');
+
+    //         $.ajax({
+    //             url: '{{ route("ajax.rating.init") }}',  
+    //             method: 'POST',
+    //             data: {
+    //                 _token: '{{ csrf_token() }}',
+    //                 product_id: productId
+    //             },
+    //             success: function (response) {
+    //                 if (response.status === 'success') {
+
+    //                     // Set hidden input values from the response
+    //                     $('#order_id').val(response.order_id);
+    //                     $('#product_id').val(response.product_id);
+
+    //                     // Open the review modal
+    //                     $('#reviewModal').modal('show');
+
+    //                     // If both review ID and order ID exist, it's an update case
+
+    //                     // if (response.user_view_id && response.order_id) {
+    //                     //       $('#reviewUpdateModal1').modal('show');
+    //                     // }
+
+    //                 } else {
+    //                     // Show warning alert if something went wrong
+    //                     Swal.fire('Oops!', response.message || 'Failed to load rating form.', 'warning');
+    //                 }
+    //             },
+    //             error: function (xhr) {
+    //                 Swal.fire('Error', 'You have not ordered this product.', 'error');
+    //             }
+    //         });
+    // });
+
+    // new change ******************************
+    $('.addToRatingBtn1').on('click', function (e) {
+            e.preventDefault();
+
+           const productId = $(this).data('id');
+
+            $.ajax({
+                url: '{{ route("ajax.rating.init") }}',  
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    product_id: productId
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        $('#order_id').val(response.order_id);
+                        $('#product_id').val(response.product_id);
+
+                        // Set rating if it exists
+                        if (response.rating) {
+                            $('#ratingValue').val(response.rating);
+                            $('.star').each(function () {
+                                const starValue = $(this).data('value');
+                                if (starValue <= response.rating) {
+                                    $(this).addClass('text-warning'); // highlight selected stars
+                                } else {
+                                    $(this).removeClass('text-warning');
+                                }
+                            });
+                        } else {
+                            $('.star').removeClass('text-warning');
+                            $('#ratingValue').val('');
+                        }
+
+                        // Set review text if it exists
+                        if (response.review) {
+                            $('textarea[name="review"]').val(response.review);
+                        } else {
+                            $('textarea[name="review"]').val('');
+                        }
+
+                        $('#reviewModal').modal('show');
+                    }
+
+                },
+                error: function (xhr) {
+                    Swal.fire('Error', 'You have not ordered this product.', 'error');
+                }
+            });
+        });
+
+
+
 	$('#chatToggleBtn').on('click', function () {
 		const modal = $('#supportChatModal');
 		if (modal.is(':visible')) {
@@ -446,37 +703,49 @@ $(document).ready(function () {
 	});
 });
 
-let page = 1;
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
 
-$('#loadMoreBtn').on('click', function () {
-    page++;
+$(document).on('click', '.addtocart', function (e) {
+    e.preventDefault();
+
+    const button = $(this);
+    const productId = button.data('id');
+    const price = button.data('price');
+
+    if (button.hasClass('processing') || button.hasClass('added')) return;
+
+    button.addClass('processing');
 
     $.ajax({
-        url: "{{ route('user.loadMoreProducts') }}",
-        method: "POST",
+        url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
+        type: "POST",
         data: {
             _token: "{{ csrf_token() }}",
-            page: page
+            quantity: 1,
+            price: price
         },
-        beforeSend: function () {
-            $('#loadMoreBtn').text('Loading...');
-        },
-        success: function (res) {
-            $('#product-wrapper').append(res.html);
-            if (!res.hasMore) {
-                $('#loadMoreBtn').hide();
+        success: function (response) {
+            if (response.success) {
+                $('.cart-count').text(response.cartCount);
+                button.addClass('added');
+
+                setTimeout(() => {
+                    button.removeClass('added processing');
+                }, 2000);
             } else {
-                $('#loadMoreBtn').text('Show More');
+                button.removeClass('processing');
+                console.log(response);
             }
         },
-        error: function () {
-            alert('Failed to load more products.');
-            $('#loadMoreBtn').text('Show More');
+        error: function (xhr) {
+            console.log(xhr);
+            button.removeClass('processing');
         }
     });
 });
-
-
-
 </script>
 @endsection
