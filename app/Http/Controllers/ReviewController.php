@@ -12,81 +12,93 @@ use Illuminate\Support\Facades\Auth;
 class ReviewController extends Controller
 {
 
-public function store(Request $request)
-{
-    $request->validate([
+    public function store(Request $request)
+    {
 
-        'order_id' => 'required|exists:orders,id',
-        'rating' => 'required|integer|min:1|max:5',
-        'review' => 'required|string|max:1000',
-    ]);
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'required|string|max:1000',
+        ]);
+
+        $order = Order::findOrFail($request->order_id);
 
 
-
-    $order = Order::findOrFail($request->order_id);
 
         $product_id = $request->product_id;
 
+
         $review = UserReview::where('user_id', Auth()->id())
-        ->where('order_id', $order->id)
-        ->where('product_id', $product_id)
-        ->first();
+            ->where('order_id', $order->id)
+            ->where('product_id', $product_id)
+            ->first();
 
 
-    if ($review) {
-        // Update existing review
-        $review->update([
-            'rating' => $request->rating,
-            'comment' => $request->review,
-        ]);
-        $message = 'Review updated successfully.';
+        if ($review) {
 
-    } else {
+            $review->update([
+                'rating' => $request->rating,
+                'comment' => $request->review,
+            ]);
+            $message = 'Review updated successfully.';
+        } else {
 
-        UserReview::create([
-            'user_id' => Auth()->id(),
-            'order_id' => $order->id,
-            'product_id' => $product_id,
-            'rating' => $request->rating,
-            'comment' => $request->review,
-        ]);
-        $message = 'Review submitted successfully.';
-    }
+            UserReview::create([
+                'user_id' => Auth()->id(),
+                'order_id' => $order->id,
+                'product_id' => $product_id,
+                'rating' => $request->rating,
+                'comment' => $request->review,
+            ]);
+            $message = 'Review submitted successfully.';
+        }
 
         return response()->json([
             'message' => 'Thank you! Your review has been submitted.',
-            'redirect_url' => route('orders')
+            'redirect_url' => route('dashboard')
         ]);
+    }
 
-}
+    public function init(Request $request)
+    {
 
-public function init(Request $request)
-{
+        $productId = $request->input('product_id');
 
-    $productId = $request->input('product_id');
 
-    $product = Product::find($productId);
+        $product = Product::find($productId);
 
-    $product_id = $product->id;
+        // $product_id = $product->id;
 
-    $userId =  Auth()->id();
+        $userId =  Auth()->id();
 
-    $item = OrderItem::where('product_id', $product->id)
-        ->whereHas('order', function ($query) use ($userId) {
-            $query->where('user_id', $userId);
-        })
+        $item = OrderItem::where('product_id', $product->id)
+            ->whereHas('order', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
 
-        ->first();
+            ->first();
 
         $order_id =  $item->order_id;
+        $product_id = $item->product_id;
 
 
-        $userreviewrecord = UserReview::where('product_id', $product_id )->first();
+        $userreviewrecord = UserReview::where('product_id', $product_id)->first();
+        if (!$userreviewrecord) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ready to show modal.',
+                'order_id' => $order_id,
+                'add_rating' => 'add rating',
+                'product_id' => $product_id,
+
+            ]);
+        }
 
         $user_view_id = $userreviewrecord->id;
         $user_view_id = $userreviewrecord?->id;
         $rating = $userreviewrecord?->rating;
-        $review = $userreviewrecord?->review;
+        $review = $userreviewrecord?->comment;
+
 
         return response()->json([
             'status' => 'success',
@@ -99,15 +111,9 @@ public function init(Request $request)
         ]);
 
 
-    if (!$order_id) {
+        if (!$order_id) {
 
-        return response()->json(['status' => 'error', 'message' => 'Product not found.'], 404);
+            return response()->json(['status' => 'error', 'message' => 'Product not found.'], 404);
+        }
     }
-
-
-
-}
-
-
-
 }

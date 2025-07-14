@@ -1,8 +1,8 @@
 @extends('user.layouts.master')
 
 @section('content')
- 
- 
+
+
 <div class="container mt-5" >
     @if($order->payment_status === 'paid' ||  $order->payment_status === 'COMPLETED')
     <div class="card shadow-sm p-4 border-success">
@@ -15,7 +15,7 @@
                 </svg>-->
             </div>
         </div>
-        
+
         <h2 class="mb-3 text-center text-success">Payment Successful!</h2>
         <p class="lead text-center">Your order has been placed successfully.</p>
 
@@ -61,7 +61,7 @@
                 </svg>
             </div>
         </div>
-        
+
         <h2 class="mb-3 text-center text-danger">Order Processing Failed</h2>
         <p class="lead text-center">We encountered an issue while processing your order.</p>
 
@@ -93,7 +93,7 @@
 </div>
 @if($order->payment_status === 'paid' || $order->payment_status === 'COMPLETED')
 <!-- Review & Rating Modal -->
-<div class="modal fade" id="reviewModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+{{-- <div class="modal fade" id="reviewModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
     <div class="modal-dialog">
        <form id="reviewForm" method="POST" action="{{ route('submit.review') }}">
             @csrf
@@ -123,7 +123,7 @@
             </div>
         </form>
     </div>
-</div>
+</div> --}}
 @endif
 
 
@@ -136,7 +136,7 @@
         width: 80px;
         height: 80px;
     }
-    
+
     .checkmark {
         /* removed margin-top for better vertical alignment */
         width: 80px;
@@ -149,7 +149,7 @@
         box-shadow: 0 0 0 rgba(75, 183, 27, 0.4);
         animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
     }
-    
+
     .checkmark__circle {
         stroke-dasharray: 166;
         stroke-dashoffset: 166;
@@ -159,20 +159,20 @@
         fill: none;
         animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
     }
-    
+
     .checkmark__check {
         transform-origin: 50% 50%;
         stroke-dasharray: 48;
         stroke-dashoffset: 48;
         animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
     }
-    
+
     @keyframes stroke {
         100% {
             stroke-dashoffset: 0;
         }
     }
-    
+
     @keyframes scale {
         0%, 100% {
             transform: none;
@@ -181,7 +181,7 @@
             transform: scale3d(1.1, 1.1, 1);
         }
     }
-    
+
     @keyframes fill {
         100% {
             box-shadow: inset 0 0 0 100px rgba(75, 183, 27, 0);
@@ -196,7 +196,7 @@
         width: 80px;
         height: 80px;
     }
-    
+
     .crossmark {
         width: 80px;
         height: 80px;
@@ -207,7 +207,7 @@
         stroke-miterlimit: 10;
         animation: crossmark-rotate 0.7s linear;
     }
-    
+
     .crossmark__circle {
         stroke-dasharray: 166;
         stroke-dashoffset: 166;
@@ -217,20 +217,20 @@
         fill: none;
         animation: crossmark-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
     }
-    
+
     .crossmark__cross {
         transform-origin: 50% 50%;
         stroke-dasharray: 48;
         stroke-dashoffset: 48;
         animation: crossmark-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
     }
-    
+
     @keyframes crossmark-stroke {
         100% {
             stroke-dashoffset: 0;
         }
     }
-    
+
     @keyframes crossmark-rotate {
         0% {
             transform: rotate(0deg);
@@ -257,90 +257,12 @@
 </style>
 
 
- 
 
- 
+
+
 @endif
- <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const modal = new bootstrap.Modal(document.getElementById('reviewModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
 
-        const stars = document.querySelectorAll('.star-rating .star');
-        const ratingInput = document.getElementById('ratingValue');
 
-        stars.forEach((star, index) => {
-            star.addEventListener('click', function () {
-                const rating = this.getAttribute('data-value');
-                ratingInput.value = rating;
-
-                stars.forEach(s => s.classList.remove('selected'));
-                for (let i = 0; i < rating; i++) {
-                    stars[i].classList.add('selected');
-                }
-            });
-        });
-    });
-</script>
-<script>
-    $(document).ready(function () {
-         
-        $('.star').on('click', function () {
-            const value = $(this).data('value');
-            $('#ratingValue').val(value);
-            $('.star').removeClass('text-warning');
-            $(this).prevAll().addBack().addClass('text-warning');
-        });
-
-        
-        $('#reviewForm').on('submit', function (e) {
-            e.preventDefault();  
-
-            const form = $(this);
-            const actionUrl = form.attr('action');
-            const formData = form.serialize();
-
-            $.ajax({
-                url: actionUrl,
-                method: 'POST',
-                data: formData,
-                success: function (response) {
-
-                    if (response.redirect_url) {
-                        window.location.href = response.redirect_url;
-                    } else {
-                        alert(response.message);
-                    }
-                },
-              error: function (xhr) {
-                    const response = xhr.responseJSON;
-
-                    if (xhr.status === 409 && response?.error && response?.redirect_url) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Already Reviewed',
-                            text: response.error,
-                            confirmButtonText: 'Go to Order'
-                        }).then(() => {
-                            window.location.href = response.redirect_url;
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response?.error || 'Something went wrong.',
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                }
-
-            });
-        });
-    });
-</script>
 
 
 
