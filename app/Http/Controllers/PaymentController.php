@@ -19,9 +19,9 @@ class PaymentController extends Controller
     }
 
     public function payment(Request $request)
-    {     
-        
-        // dd($request);
+    {
+
+
            $validated = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
@@ -54,7 +54,7 @@ class PaymentController extends Controller
         $provider = new PayPalClient;
         $provider->setApiCredentials(config('paypal'));
         $paypalToken = $provider->getAccessToken();
-  
+
         $response = $provider->createOrder([
             "intent" => "CAPTURE",
             "application_context" => [
@@ -70,26 +70,26 @@ class PaymentController extends Controller
                 ]
             ]
         ]);
-  
+
         if (isset($response['id']) & $response['id'] != null) {
-  
+
             foreach ($response['links'] as $link) {
                 if ($link['rel'] === 'approve') {
                     return response()->json(['approval_url' => $link['href']]);
                 }
             }
 
-  
+
             return redirect()
                 ->route('cancel.payment')
                 ->with('error', 'Something went wrong.');
-  
+
         } else {
             return redirect()
                 ->route('create.payment')
                 ->with('error', $response['message'] ?? 'Something went wrong.');
         }
-    
+
     }
 
 
@@ -99,7 +99,7 @@ class PaymentController extends Controller
               ->route('paypal')
               ->with('error', $response['message'] ?? 'You have canceled the transaction.');
     }
-  
+
     /**
      * Write code on Method
      *
@@ -118,7 +118,7 @@ class PaymentController extends Controller
         $provider->getAccessToken();
 
         $response = $provider->capturePaymentOrder($request->input('token'));
-        
+
 
         if (!isset($response['status']) || $response['status'] !== 'COMPLETED') {
             return response()->json(['error' => 'Payment was not completed.'], 400);
@@ -155,11 +155,11 @@ class PaymentController extends Controller
                 'payment_status' => $response['status'],
                 'status'         => $response['status'],
                 'transaction_id' => $response['id'],
-                'coupon_code'    => $applied_coupon_code ?? '', 
+                'coupon_code'    => $applied_coupon_code ?? '',
                 'discount' =>  0,
                 'total'=>$final_total,
                 'product_id' => ''
-                 
+
 
             ]);
 
@@ -173,11 +173,11 @@ class PaymentController extends Controller
                 ]);
             }
 
-            Cart::where('user_id', auth()->id())->delete();
+            Cart::where('user_id', Auth()->id())->delete();
 
             DB::commit();
 
-             
+
 
             return redirect()->route('checkout.success', ['order' => $order->id]);
 
