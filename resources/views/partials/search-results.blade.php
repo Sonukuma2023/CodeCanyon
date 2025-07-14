@@ -56,53 +56,201 @@
                 width: auto;
             }
         }
+            /* ********************************************? */
+             .filter-toggle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .filter-chevron {
+        transition: transform 0.2s;
+        font-size: 14px;
+        color: #999;
+    }
+
+    .filter-chevron.rotate {
+        transform: rotate(180deg);
+    }
+
+    .filter-content {
+        display: none;
+        margin-top: 8px;
+    }
+
+    .filter-content.active {
+        display: block;
+    }
+
+    .checkbox-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 10px;
+    }
+
+
+
+
+
+
+
+
     </style>
+    <div id="container" style="text-align: center;">
+        <span id="relevant"></span>
+        <span id="relevant1"></span>
+    </div>
+
 
     <div class="container-fluid mt-4">
         <div class="row">
-            <!-- Sidebar Filter -->
+            {{-- Left Sidebar --}}
             <div class="col-md-3">
-                <form id="filter-form" action="{{ route('products.search') }}" method="GET">
-                    <h5 class="mb-3">Filter & Refine</h5>
+                {{-- Category Filter --}}
+                <label class="form-label"> <strong> Category </strong> {{ $categories->count() }}</label>
+                <div class="mb-3">
+                    @if ($categories->count() > 0)
+                        <select class="form-select" name="category_id">
+                            {{-- <option value="">Select</option> --}}
+                            @foreach ($categories as $cat)
+                                <option value="{{ $cat->id }}">
+                                    {{ $cat->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
+                </div>
+                {{-- *********************************filter price ************************************ --}}
 
-                    <!-- Category -->
-                    <label class="form-label">Category ({{ $categories->count() }})</label>
-                    <div class="mb-3">
-                        @if ($categories->count() > 0)
-                            <select class="form-select" name="category_id">
-                                <option value="">Select Category</option>
-                                @foreach ($categories as $cat)
-                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
-                        @endif
-                    </div>
-
-                    <!-- Price -->
+                <form id="filter-form">
+                    <h5>Filter & Refine</h5>
                     <div class="mb-3">
                         <label class="form-label">Price</label>
                         <div class="d-flex gap-2">
-                            <input type="number" name="min_price" class="form-control" placeholder="Min">
-                            <input type="number" name="max_price" class="form-control" placeholder="Max">
+                            <input type="number" name="min_price" id ="min_price" class="form-control" placeholder="Min">
+                            <input type="number" name="max_price" id ="max_price" class="form-control" placeholder="Max">
+                            {{-- <h5 class="card-title">{{ $product->name }}</h5> --}}
+                            <input type="hidden" name ="product_name" id= "product_name" value="{{ $query }}">
+                            <span><button type="submit" class="btn btn-primary w-100">></button></span>
                         </div>
+
                     </div>
+                </form>
 
-                    <input type="hidden" name="product_name" value="{{ $query }}">
 
-                    <!-- On Sale -->
-                    <div class="mb-3">
-                        <h5 class="form-label">On Sale</h5>
-                        <input type="checkbox" name="onsale[]" value="1"
-                            {{ in_array('1', request()->get('onsale', [])) ? 'checked' : '' }}>
-                        <label>Yes</label>
-                    </div>
+                <div class="filter-section">
 
-                    <!-- Sales Levels -->
-                    <div class="mb-3">
+                    <form id="salesFilterForm" action="{{ route('products.search') }}" method="GET">
+
+                        <input type="hidden" name ="product_name" id= "product_name" value="{{ $query }}">
+                           <input type="hidden" name="min_price" id ="min_price" class="form-control" placeholder="Min" value="10">
+                            <input type="hidden" name="max_price" id ="max_price" class="form-control" placeholder="Max" value="12">
+
+
+                            <div class="filter-toggle" onclick="toggleFilter(this)">
+                                <h5 class="form-label" style="margin: 0;">On Sale</h5>
+                                <span class="filter-chevron">&#9650;</span> <!-- ^ icon -->
+                            </div>
+
+                            <div class="filter-content">
+                                <div style="display: flex; align-items: center; gap: 5px; margin-top: 10px;">
+                                    <input type="checkbox" name="onsale[]" value="1"
+                                        {{ in_array('1', request()->get('sales', [])) ? 'checked' : '' }}>
+
+                                    <label class="checkbox-line">
+                                        <span>Yes</span>
+                                        <span>{{ $total_on_sale }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <br><br>
+                            <!-- ***************************************************************************************** -->
+                            <!-- Sales Filter Section -->
+                            <div class="filter-section">
+                                <div class="filter-toggle" onclick="toggleFilter(this)">
+                                    <h5 class="form-label" style="margin: 0;">Sales</h5>
+                                    <span class="filter-chevron">&#9650;</span>
+                                </div>
+
+                                <div class="filter-content">
+                                    <!-- No Sale -->
+                                    <div style="display: flex; align-items: center; gap: 5px; margin-top: 10px;">
+                                        <input type="checkbox" name="sales[]" value="no sale"
+                                            {{ in_array('no sale', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>No Sales</span>
+                                            <span>{{ $total_no_sale }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Low -->
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" name="sales[]" value="low"
+                                            {{ in_array('low', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>Low</span>
+                                            <span>{{ $total_low }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Medium -->
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" name="sales[]" value="medium"
+                                            {{ in_array('medium', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>Medium</span>
+                                            <span>{{ $total_medium }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- High -->
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" name="sales[]" value="high"
+                                            {{ in_array('high', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>High</span>
+                                            <span>{{ $total_high }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Top Sellers -->
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <input type="checkbox" name="sales[]" value="top sellers"
+                                            {{ in_array('top sellers', request()->get('sales', [])) ? 'checked' : '' }}>
+                                        <label style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+                                            <span>Top Sellers</span>
+                                            <span>{{ $total_top_seller }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+  
+
+
+                        
+                    </form>
+                </div> 
+                <!-- <div class="filter-section">
+                    <form id="salesFilterForm" action="{{ route('products.search') }}" method="GET">
+                        <input type="hidden" name="product_name" id="product_name" value="{{ $query }}">
+
+                        <div>
+                            <h5 class="form-label">On Sale</h5>
+                            <input type="checkbox" name="onsale[]" value="1"
+                                {{ in_array('1', request()->get('onsale', [])) ? 'checked' : '' }}>
+                            <label>Yes</label>
+                            <br><br>
+                        </div>
+
                         <h5>Sales</h5>
                         @php
                             $salesOptions = ['no sale', 'low', 'medium', 'high', 'top sellers'];
                         @endphp
+
                         @foreach ($salesOptions as $option)
                             <div>
                                 <input type="checkbox" name="sales[]" value="{{ $option }}"
@@ -110,25 +258,33 @@
                                 <label>{{ ucfirst($option) }}</label>
                             </div>
                         @endforeach
-                    </div>
+                    </form>
+                </div> -->
 
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-filter-circle me-1"></i> Apply Filters
-                        </button>
-                    </div>
-                </form>
+
+
+
             </div>
 
-            <!-- Product List -->
+            {{-- Right Product List --}}
             <div class="col-md-9">
+
+                {{-- AJAX Response Container --}}
                 <div id="filtered-products" class="mt-4"></div>
+
+                {{-- Static Blade Rendered Products (only show if no AJAX response) --}}
                 <div id="search_sales_products" class="mt-4"></div>
+
+                {{-- <div id="search_on_sales_products" class="mt-4"></div> --}}
+
+
                 <div id="static-products" class="row">
+
                     @forelse($search_products as $index => $product)
                         <div class="col-md-4 mb-4">
                             <div class="card h-100 shadow-sm">
-                                <img src="{{ asset('storage/' . $product->thumbnail) }}" class="card-img-top" alt="{{ $product->name }}" style="height: 200px; object-fit: cover;">
+                                <img src="{{ asset('storage/uploads/thumbnails/' . $product->thumbnail) }}" class="card-img-top"
+                                    alt="{{ $product->name }}" style="height: 200px; object-fit: cover;">
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title">{{ $product->name }}</h5>
                                     <p class="card-text text-muted">{{ Str::limit($product->description, 100) }}</p>
@@ -142,19 +298,80 @@
                         </div>
                     @empty
                         <div class="col-12">
-                            <div class="alert alert-warning text-center shadow-sm rounded">
-                                <h5 class="mb-1"><i class="bi bi-emoji-frown text-warning"></i> No Products Found</h5>
-                                <p class="mb-0">Try adjusting your filters or search keywords.</p>
-                            </div>
+                            <p>No products found.</p>
                         </div>
                     @endforelse
                 </div>
+
             </div>
         </div>
     </div>
+
+
+
+    @auth
+        <!-- Floating Chat Button -->
+        <div id="chatToggleBtn" style="position: fixed; bottom: 30px; right: 30px; z-index: 9999;">
+            <button class="btn btn-primary rounded-circle" style="width: 60px; height: 60px;">
+                <i class="fas fa-comment-alt" style="font-size: 20px;"></i>
+                <span id="unreadCountBadge"
+                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    style="font-size: 12px; display: none;">
+                    0
+                </span>
+            </button>
+        </div>
+
+        <!-- Custom Floating Chat Modal -->
+        <div id="supportChatModal"
+            style="position: fixed;bottom: 100px; right: 30px; width: 320px; background: #fff;border-radius: 10px; box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2); z-index: 9999; display: none; overflow: hidden;">
+            <div class="modal-header bg-primary text-white d-flex justify-content-between align-items-center px-3 py-2">
+                <h5 class="modal-title mb-0">Support Chat</h5>
+                <button type="button" class="btn-close btn-close-white" onclick="$('#supportChatModal').hide()"></button>
+            </div>
+
+            <div class="modal-body p-3" style="flex: 1;">
+                <div class="chat-box" id="chatBox">
+                    <div id="messages-container"></div>
+                </div>
+                <form id="chatForm" class="mt-2">
+                    @csrf
+                    <div class="chat-input">
+                        <textarea class="form-control mb-2" rows="2" id="message_content" name="message_content"
+                            placeholder="Type your message..."></textarea>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary w-100">Send</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    @endauth
+
+    <!-- Call to Action -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Start Selling?</h2>
+                <p>Join our community of 50,000+ authors and reach millions of customers worldwide.</p>
+                <a href="#" class="btn btn-light btn-lg">Become an Author</a>
+            </div>
+        </div>
+    </section>
 @endsection
 
+
 @section('scripts')
+    <script>
+        function toggleFilter(element) {
+            const content = element.nextElementSibling;
+            const chevron = element.querySelector('.filter-chevron');
+
+            content.classList.toggle('active');
+            chevron.classList.toggle('rotate');
+        }
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
                <script>
                 function clearPriceFilter() {
@@ -269,9 +486,13 @@
             // });
 
             $('#salesFilterForm input[type="checkbox"]').on('change', function() {
+               
+                
                 let form = $('#salesFilterForm');
                 let actionUrl = form.attr('action');
                 let formData = form.serialize();
+                
+                 
 
                 const startTime = performance.now();
 
@@ -320,8 +541,8 @@
                                 if (i % 3 === 0) output += '<div class="row mb-4">';
 
                                 let product = products[i];
-                                let imageUrl = `/storage/${product.thumbnail}`;
-
+                                let imageUrl = `/storage/${product.thumbnails}`;
+                                 
                                 output += `
                         <div class="col-md-4">
                             <div class="card h-100 shadow-sm">
@@ -455,6 +676,7 @@
                         let relevantHTML = '';
 
                         if (minPrice || maxPrice) {
+
                             let rangeText = '$';
                             rangeText += minPrice ? minPrice : '0';
                             rangeText += ' - $';
@@ -511,6 +733,7 @@
                         }
 
                         $('#filtered-products').html(output);
+
                     },
 
                     error: function(xhr) {
@@ -518,6 +741,21 @@
                         alert('Something went wrong.');
                     }
                 });
+                 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             });
 
 

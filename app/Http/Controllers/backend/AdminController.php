@@ -22,12 +22,26 @@ use App\Events\CommunityCreated;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Coupons;
 use App\Models\Cart;
+use App\Models\CollectionProduction;
 
 class AdminController extends Controller
 {
-    public function dashboard() {
-        return view('admin.dashboard');
+    // public function dashboard() 
+    // {
+    //     return view('admin.dashboard');
+    // }
+
+    
+    public function dashboard() 
+    {
+        $userCount = User::count();
+        $orderCount = Order::count();
+        $productCount = Product::count();
+        $totalRevenue = Order::whereIn('payment_status', ['paid', 'COMPLETED'])->sum('total');
+
+        return view('admin.dashboard', compact('userCount', 'orderCount', 'productCount', 'totalRevenue'));
     }
+
 
     public function adduser() {
         return view('admin.addUsers');
@@ -1005,8 +1019,60 @@ class AdminController extends Controller
         ]);
     }
 
+    public function userCollectionsPage(){
+        return view('admin.user_collections.list');
+    }
 
+    public function fetchUserCollections()
+    {
+        $collections = CollectionProduction::with(['collection.user', 'product'])->latest()->get();
 
+        $data = $collections->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'user_name' => $item->collection->user->name ?? 'N/A',
+                'collection_name' => $item->collection->name ?? 'N/A',
+                'product_name' => $item->product->name ?? 'N/A',
+                'price' => $item->product ? number_format($item->product->regular_license_price, 2) : 'N/A',
+                'created_at' => $item->created_at->diffForHumans(),
+                'actions' => '
+                    <a href="' . route('admin.showAllUserCollections', $item->id) . '" class="btn btn-sm btn-info me-1">View</a>
+                    <a href="#" class="btn btn-sm btn-danger remove-collection-product" 
+                    data-id="' . $item->id . '" 
+                    data-href="' . route('admin.deleteUserCollections', $item->id) . '">
+                    <i class="mdi mdi-delete"></i> Delete
+                    </a>'
+            ];
+        });
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function deleteUserCollections($id)
+    {
+        $collectionProduct = CollectionProduction::find($id);
+
+        if (!$collectionProduct) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Collection item not found.'
+            ], 404);
+        }
+
+        $collectionProduct->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Collection item deleted successfully.'
+        ]);
+    }
+
+    public function showAllUserCollections()
+    {
+        $collections = CollectionProduction::with(['collection.user', 'product'])->latest()->get();
+
+        return view('admin.user_collections.view', compact('collections'));
+    }
 
 
 
