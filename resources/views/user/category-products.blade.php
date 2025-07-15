@@ -12,13 +12,13 @@
                     $previewFiles = json_decode($product->preview, true) ?? [];
                     $livePreviewFiles = json_decode($product->live_preview, true) ?? [];
 
-                    $thumbnail = $product->thumbnail 
-    ? asset('storage/' . $product->thumbnail) 
+                    $thumbnail = $product->thumbnail
+    ? asset('storage/' . $product->thumbnail)
     : asset('default-thumbnail.jpg');
 
-echo $thumbnail;
-echo "<br>";
-echo "http://127.0.0.1:8000/storage/uploads/thumbnails/5MJ7c8yMcChpcTpYqS2Ngw7qiKowM1nULjHSs9bl.jpg";
+// echo $thumbnail;
+// // echo "<br>";
+// // echo "http://127.0.0.1:8000/storage/uploads/thumbnails/5MJ7c8yMcChpcTpYqS2Ngw7qiKowM1nULjHSs9bl.jpg";
 
                     $inlinePreview = $product->inline_preview ? asset('storage/' . $product->inline_preview) : '#';
                 @endphp
