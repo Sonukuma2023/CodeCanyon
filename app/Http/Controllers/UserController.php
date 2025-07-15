@@ -25,10 +25,11 @@ class UserController extends Controller
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-		$reviewsByProduct = UserReview::where('user_id', auth()->id())->get()->groupBy('product_id');
+		$reviewsByProduct = UserReview::where('user_id', Auth()->id())->get()->groupBy('product_id');
 
-		 
-		 
+
+
+
         return view('user.dashboard', compact('categories', 'products', 'navbarCategories','reviewsByProduct'));
     }
 
@@ -301,7 +302,7 @@ class UserController extends Controller
 
 		return view('user.category-products', compact('category', 'products', 'categories', 'navbarCategories'));
 	}
-	
+
 
 	public function addWhislist(Request $request)
 	{
@@ -339,7 +340,7 @@ class UserController extends Controller
 		$userId = auth()->id();
 
 		$coupon = Coupons::where('code', $code)
-			->where('status', 'active') 
+			->where('status', 'active')
 			->first();
 
 		if (!$coupon) {
@@ -401,6 +402,6 @@ class UserController extends Controller
 		]);
 	}
 
-		
+
 
 }
