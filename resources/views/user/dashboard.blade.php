@@ -48,15 +48,88 @@
     .chat-input textarea {
         resize: none;
     }
-	
+
 	@media (max-width: 576px) {
     #supportChatModal {
         right: 10px;
         left: 10px;
         width: auto;
     }
+
 }
+.addtocart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em 1.2em;
+    border-radius: 25px;
+    border: none;
+    font-size: 0.9rem;
+    background: #0652DD;
+    color: #fff;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+    min-width: auto;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.addtocart:hover {
+    transform: scale(1.05);
+}
+
+.addtocart .pretext {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.addtocart.added .pretext {
+    opacity: 0;
+}
+
+.addtocart .done {
+    position: absolute;
+    inset: 0;
+    background: #38c172;
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    color: #fff;
+}
+
+.addtocart.added .done {
+    transform: translateX(0);
+}
+
+.addtocart .posttext {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.fa-cart-plus, .fa-check {
+    margin-right: 6px;
+    font-size: 0.9rem;
+}
+
+    
+
 </style>
+
     <section class="hero">
         <div class="container">
             <div class="col-md-6">
@@ -72,39 +145,53 @@
                     <img src="{{ asset('frontend/images/5.jpg') }}" alt="Thumbnail" style="width: 80%;mix-blend-mode: multiply;">
                 </div>
             </div>
-            
+
         </div>
     </section>
-	
-	
+
+
 	<!-- Custom Tools Section -->
-	<section class="tools-section bg-white">
-		<div class="container">
-			<div class="row g-4">
+    <section class="tools-section bg-white">
+        <div class="container">
+            <div class="row g-4">
 
-				<div class="col-md-3">
-					<a href="{{ route('user.communityList') }}" class="category-card text-center">
-						<div class="category-icon">
-							<i class="bi bi-people-fill"></i>
-						</div>
-						<h3>Community</h3>
-						<p class="item-count">Discuss & Share</p>
-					</a>
-				</div>
+                <!-- Community Card -->
+                <div class="col-md-3">
+                    <a href="{{ route('user.communityList') }}" class="category-card text-center">
+                        <div class="category-icon">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h3>Community</h3>
+                        <p class="item-count">Discuss & Share</p>
+                    </a>
+                </div>
 
-				<!-- Script Runner Card -->
-				<div class="col-md-3">
-					<a href="{{ route('user.scriptRunnerPage') }}" class="category-card text-center">
-						<div class="category-icon">
-							<i class="bi bi-terminal-fill"></i>
-						</div>
-						<h3>Script Runner</h3>
-						<p class="item-count">Try & Execute Code</p>
-					</a>
-				</div>
-			</div>
-		</div>
-	</section>
+                <!-- Script Runner Card -->
+                <div class="col-md-3">
+                    <a href="{{ route('user.scriptRunnerPage') }}" class="category-card text-center">
+                        <div class="category-icon">
+                            <i class="bi bi-terminal-fill"></i>
+                        </div>
+                        <h3>Script Runner</h3>
+                        <p class="item-count">Try & Execute Code</p>
+                    </a>
+                </div>
+
+                <!-- All Products Card -->
+                <div class="col-md-3">
+                    <a href="{{ route('user.allProducts') }}" class="category-card text-center">
+                        <div class="category-icon">
+                            <i class="bi bi-box-seam"></i> <!-- Box icon for products -->
+                        </div>
+                        <h3>All Products</h3>
+                        <p class="item-count">Browse All Scripts</p>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
 
 
     <!-- Categories Section -->
@@ -152,7 +239,7 @@
                         <h3>{{ $category->name }}</h3>
                         <p class="item-count">420+ Templates</p>
                     </a>
-                @endforeach                
+                @endforeach
             </div>
         </div>
     </section>
@@ -166,44 +253,59 @@
                 <h2 class="section-title">2025's Best Selling Scripts</h2>
                 <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
             </div>
-            
+
             <div class="products-grid">
                 @foreach ($products as $product)
                     @if($product->status != 'pending')
                         <div class="product-card">
                             <div class="product-image">
-                                <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}" loading="lazy">
+                                <img src="{{ asset('storage/uploads/thumbnails/' . $product->thumbnail) }}" alt="{{ $product->name }}" loading="lazy">
                                 <a href="{{ route('user.singleproduct', $product->id) }}" class="quick-view" data-product-id="{{ $product->id }}">Quick View</a>
                             </div>
-                            
+
                             <div class="product-details">
                                 <h3 class="product-title">{{ $product->name }}</h3>
+                               
                                 <div class="product-author">by <a href="#">{{ $product->name }}</a></div>
-                                
+
                                 <div class="product-meta">
-                                    <div class="rating">
-                                        <div class="stars">
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star-half-alt"></i>
-                                        </div>
-                                    </div>
-                                    <div class="sales">
-                                        <i class="fas fa-chart-line"></i> 1200+ sales
-                                    </div>
-                                </div>
+                                        @php
+                                            $userReviews = $reviewsByProduct[$product->id] ?? collect();
+                                            $rating = $userReviews->first()->rating ?? 0;
+                                        @endphp
+                                        @if($rating > 0)
+                                            @for($i = 1; $i <= $rating; $i++)
+                                                <i class="fas fa-star text-warning"></i>
+                                            @endfor
+                                            @for($j = $rating + 1; $j <= 5; $j++)
+                                                <i class="far fa-star text-muted"></i> {{-- empty star --}}
+                                            @endfor
+                                        @else
+                                            <span>No reviews</span>
+                                        @endif
                                 
+                                    <div class="check Check_product">
+                                        <button class="btn btn-success addToRatingBtn1" data-id="{{ $product->id }}">Add to Rating</button>
+                                    </div>
+
+
+
+                                </div>
+
                                 <div class="product-footer">
                                     <!-- Product price -->
                                     <div class="price">${{ number_format($product->regular_license_price, 2) }}</div>
-                                        <form action="{{ route('cart.add', $product->id) }}" method="POST">
-                                            @csrf
-                                            <button class="btn btn-primary btn-sm" style="border:none;">
-                                            Add to Cart</button>
-                                        </form>
-                                </div>
+                                        <button class="addtocart" data-id="{{ $product->id }}" data-price="{{ $product->regular_license_price }}">
+                                            <div class="pretext">
+                                                <i class="fas fa-cart-plus"></i> ADD TO CART
+                                            </div>
+
+                                            <div class="done">
+                                                <div class="posttext"><i class="fas fa-check"></i> ADDED</div>
+                                            </div>
+                                            
+                                        </button>
+                                    </div>
                             </div>
                         </div>
                     @endif
@@ -212,7 +314,40 @@
 
         </div>
     </section>
-	
+     <div class="modal fade" id="reviewModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="reviewForm" method="POST" action="{{ route('submit.review') }}">
+                @csrf
+                <input type="hidden" name="order_id" id="order_id" value="">
+                <input type="hidden" name="product_id" id="product_id" value="">
+                
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Rate Your Order</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 text-center">
+                            <label class="form-label d-block">Your Rating</label>
+                            <div class="star-rating">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <i class="star bi bi-star-fill" data-value="{{ $i }}" style="cursor: pointer; font-size: 24px;"></i>
+                                @endfor
+                                <input type="hidden" name="rating" id="ratingValue" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="review" class="form-label">Write a Review</label>
+                            <textarea name="review" class="form-control" rows="3" placeholder="Share your experience..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="submit" class="btn btn-success">Submit Review</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 	@auth
 		<!-- Floating Chat Button -->
 		<div id="chatToggleBtn" style="position: fixed; bottom: 30px; right: 30px; z-index: 9999;">
@@ -246,7 +381,7 @@
 				</form>
 			</div>
 		</div>
-		
+
 		@endauth
 
     <!-- Call to Action -->
@@ -263,8 +398,209 @@
 @endsection
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+ 
+
+
+
+<!-- ***************************************new code *********************************** -->
 <script>
+
+$('.star').on('click', function () {
+    const rating = $(this).data('value');
+    $('#ratingValue').val(rating);
+
+    $('.star').each(function () {
+        const value = $(this).data('value');
+        if (value <= rating) {
+            $(this).addClass('text-warning');
+        } else {
+            $(this).removeClass('text-warning');
+        }
+    });
+});
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const modalElement = document.getElementById('reviewModal');
+        // const modal = new bootstrap.Modal(modalElement, {
+        //     backdrop: 'static',
+        //     keyboard: false
+        // });
+
+        // Show modal when button is clicked
+        // document.getElementById('addToRatingBtn').addEventListener('click', function () {
+        //     modal.show();
+        // });
+
+        // Handle star selection
+        const stars = document.querySelectorAll('.star-rating .star');
+        const ratingInput = document.getElementById('ratingValue');
+
+        stars.forEach((star, index) => {
+            star.addEventListener('click', function () {
+                const rating = this.getAttribute('data-value');
+                ratingInput.value = rating;
+
+                stars.forEach(s => s.classList.remove('text-warning'));
+                for (let i = 0; i < rating; i++) {
+                    stars[i].classList.add('text-warning');
+                }
+            });
+        });
+    });
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        $('#reviewForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const actionUrl = form.attr('action');
+            const formData = form.serialize();
+
+            $.ajax({
+                url: actionUrl,
+                method: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.redirect_url) {
+                        window.location.href = response.redirect_url;
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Review Submitted',
+                            text: response.message || 'Thank you for your feedback!',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    const response = xhr.responseJSON;
+
+                    if (xhr.status === 409 && response?.error && response?.redirect_url) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Already Reviewed',
+                            text: response.error,
+                            confirmButtonText: 'Go to Order'
+                        }).then(() => {
+                            window.location.href = response.redirect_url;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response?.error || 'Something went wrong.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+            });
+        });
+    });
+</script>
+
+
+
+<!-- **********************************new _code******************************************* -->
+<script>
+
 $(document).ready(function () {
+    
+    // $('.addToRatingBtn1').on('click', function (e) {
+    //         e.preventDefault();
+
+    //        const productId = $(this).data('id');
+
+    //         $.ajax({
+    //             url: '{{ route("ajax.rating.init") }}',  
+    //             method: 'POST',
+    //             data: {
+    //                 _token: '{{ csrf_token() }}',
+    //                 product_id: productId
+    //             },
+    //             success: function (response) {
+    //                 if (response.status === 'success') {
+
+    //                     // Set hidden input values from the response
+    //                     $('#order_id').val(response.order_id);
+    //                     $('#product_id').val(response.product_id);
+
+    //                     // Open the review modal
+    //                     $('#reviewModal').modal('show');
+
+    //                     // If both review ID and order ID exist, it's an update case
+
+    //                     // if (response.user_view_id && response.order_id) {
+    //                     //       $('#reviewUpdateModal1').modal('show');
+    //                     // }
+
+    //                 } else {
+    //                     // Show warning alert if something went wrong
+    //                     Swal.fire('Oops!', response.message || 'Failed to load rating form.', 'warning');
+    //                 }
+    //             },
+    //             error: function (xhr) {
+    //                 Swal.fire('Error', 'You have not ordered this product.', 'error');
+    //             }
+    //         });
+    // });
+
+    // new change ******************************
+    $('.addToRatingBtn1').on('click', function (e) {
+            e.preventDefault();
+
+           const productId = $(this).data('id');
+
+            $.ajax({
+                url: '{{ route("ajax.rating.init") }}',  
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    product_id: productId
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        $('#order_id').val(response.order_id);
+                        $('#product_id').val(response.product_id);
+
+                        // Set rating if it exists
+                        if (response.rating) {
+                            $('#ratingValue').val(response.rating);
+                            $('.star').each(function () {
+                                const starValue = $(this).data('value');
+                                if (starValue <= response.rating) {
+                                    $(this).addClass('text-warning'); // highlight selected stars
+                                } else {
+                                    $(this).removeClass('text-warning');
+                                }
+                            });
+                        } else {
+                            $('.star').removeClass('text-warning');
+                            $('#ratingValue').val('');
+                        }
+
+                        // Set review text if it exists
+                        if (response.review) {
+                            $('textarea[name="review"]').val(response.review);
+                        } else {
+                            $('textarea[name="review"]').val('');
+                        }
+
+                        $('#reviewModal').modal('show');
+                    }
+
+                },
+                error: function (xhr) {
+                    Swal.fire('Error', 'You have not ordered this product.', 'error');
+                }
+            });
+        });
+
+
+
 	$('#chatToggleBtn').on('click', function () {
 		const modal = $('#supportChatModal');
 		if (modal.is(':visible')) {
@@ -275,12 +611,12 @@ $(document).ready(function () {
 		}
 	});
 
-	
+
     function convertUtcToLocal(utcDateTime) {
         const utcDate = new Date(utcDateTime + ' UTC');
         return moment(utcDate).fromNow();
     }
-	
+
 	function markMessagesAsRead() {
 		$.ajax({
 			url: "{{ route('user.markMessagesAsRead') }}",
@@ -298,12 +634,12 @@ $(document).ready(function () {
         $.get("{{ route('user.fetchMessages') }}", function (res) {
             $('#messages-container').html('');
 			let unreadCount = 0;
-			
+
             res.messages.forEach(function (msg) {
                 const isUser = msg.sender_id === {{ auth()->id() }};
                 const cls = isUser ? 'you' : 'other';
                 const time = convertUtcToLocal(msg.sent_at);
-				
+
 				if (!isUser && msg.read_at === null) {
 					unreadCount++;
 				}
@@ -317,7 +653,7 @@ $(document).ready(function () {
                 `);
             });
             $('#chatBox').scrollTop($('#chatBox')[0].scrollHeight);
-			
+
 			const badge = $('#unreadCountBadge');
 			const modal = $('#supportChatModal');
 
@@ -357,7 +693,7 @@ $(document).ready(function () {
             fetchMessages();
         });
     });
-	
+
 	$('#chatToggleBtn').on('click', function () {
 		const modal = $('#supportChatModal');
 
@@ -365,6 +701,51 @@ $(document).ready(function () {
 		fetchMessages();
 		markMessagesAsRead();
 	});
+});
+
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+$(document).on('click', '.addtocart', function (e) {
+    e.preventDefault();
+
+    const button = $(this);
+    const productId = button.data('id');
+    const price = button.data('price');
+
+    if (button.hasClass('processing') || button.hasClass('added')) return;
+
+    button.addClass('processing');
+
+    $.ajax({
+        url: "{{ route('user.saveCart', ':id') }}".replace(':id', productId),
+        type: "POST",
+        data: {
+            _token: "{{ csrf_token() }}",
+            quantity: 1,
+            price: price
+        },
+        success: function (response) {
+            if (response.success) {
+                $('.cart-count').text(response.cartCount);
+                button.addClass('added');
+
+                setTimeout(() => {
+                    button.removeClass('added processing');
+                }, 2000);
+            } else {
+                button.removeClass('processing');
+                console.log(response);
+            }
+        },
+        error: function (xhr) {
+            console.log(xhr);
+            button.removeClass('processing');
+        }
+    });
 });
 </script>
 @endsection

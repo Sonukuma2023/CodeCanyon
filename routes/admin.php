@@ -43,12 +43,55 @@ Route::middleware(['auth', 'role:admin'])
             Auth::logout();
             return redirect('/login');
         })->name('logout');
-		
+
 		Route::get('/profile',[AdminController::class, 'adminProfile'])->name('profile');
 		Route::post('/profile',[AdminController::class, 'updateProfile'])->name('updateProfile');
-		
+
 		Route::get('/view/communities',[AdminController::class, 'viewCommunities'])->name('viewCommunities');
 		Route::get('/fetch/communities',[AdminController::class, 'fetchCommunities'])->name('fetchCommunities');
 		Route::get('/reply/community/{id}',[AdminController::class, 'replyCommunityForm'])->name('replyCommunityForm');
 		Route::post('/reply/community/{id}',[AdminController::class, 'replyCommunity'])->name('replyCommunity');
+
+
+        Route::prefix('order')->group(function () {
+            Route::get('/list', [AdminController::class, 'ordersPage'])->name('ordersPage');
+            Route::get('/fetch', [AdminController::class, 'fetchOrders'])->name('fetchOrders');
+            Route::get('/details/{order}', [AdminController::class, 'singleOrderDetails'])->name('singleOrderDetails');
+        });
+
+        Route::prefix('user/whislist')->group(function () {
+            Route::get('/list', [AdminController::class, 'whislistPage'])->name('whislistPage');
+            Route::get('/ajax/list', [AdminController::class, 'fetchWishlist'])->name('fetchWishlist');
+            Route::get('/details/{id}', [AdminController::class, 'showWishlistDetails'])->name('showWishlistDetails');
+        });
+
+        Route::prefix('coupons')->group(function () {
+            Route::get('/add', [AdminController::class, 'couponAddPage'])->name('couponAddPage');
+            Route::post('/add', [AdminController::class, 'storeCoupon'])->name('storeCoupon');
+            Route::get('/ajax/list', [AdminController::class, 'fetchCoupons'])->name('fetchCoupons');
+            Route::get('/list', [AdminController::class, 'couponsPage'])->name('couponsPage');
+            Route::get('/used',[AdminController::class, 'showUsedCoupons'])->name('showUsedCoupons');
+            Route::get('/used/data',[AdminController::class, 'fetchUsedCoupons'])->name('fetchUsedCoupons');
+            Route::delete('/{id}', [AdminController::class, 'deleteCoupons'])->name('deleteCoupons');
+            Route::get('/edit/{id}', [AdminController::class, 'editCoupon'])->name('editCoupon');
+            Route::put('/edit/{id}', [AdminController::class, 'updateCoupon'])->name('updateCoupon');
+        }); 
+        
+        Route::prefix('user/cart')->group(function () {
+            Route::get('/data', [AdminController::class, 'fetchUserCarts'])->name('fetchUserCarts');
+            Route::get('/list', [AdminController::class, 'usersCartPage'])->name('usersCartPage');
+            Route::get('/show/{id}', [AdminController::class, 'showUserCarts'])->name('showUserCarts');
+            Route::get('/edit/{id}', [AdminController::class, 'editUserCarts'])->name('editUserCarts');
+            Route::put('/edit/{id}', [AdminController::class, 'updateUserCarts'])->name('updateUserCarts');
+            Route::delete('/delete/{id}', [AdminController::class, 'deleteUserCarts'])->name('deleteUserCarts');
+        });
+
+        Route::prefix('user/collection')->group(function () {
+            Route::get('/data', [AdminController::class, 'fetchUserCollections'])->name('fetchUserCollections');
+            Route::get('/list', [AdminController::class, 'userCollectionsPage'])->name('userCollectionsPage');
+            Route::delete('/delete/{id}', [AdminController::class, 'deleteUserCollections'])->name('deleteUserCollections');
+            Route::get('/show/{id}', [AdminController::class, 'showAllUserCollections'])->name('showAllUserCollections');
+        });
+        // Route::get('single/{name}/{slug}', [AdminController::class, 'single_categories_details'])->name('single.category');
+
     });

@@ -5,11 +5,17 @@
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-bottom d-flex align-items-center">
+            <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
                 <h5 class="mb-0 text-primary">
                     <i class="bi bi-megaphone-fill me-2 text-success"></i>
                     Submit a Complaint & Comment
                 </h5>
+
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ route('user.communityList') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Community List
+                    </a>
+                </div>
             </div>
             <div class="card-body bg-light">
 

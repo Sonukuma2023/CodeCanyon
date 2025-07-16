@@ -7,13 +7,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\Review;
 use App\Models\Messages;
 use App\Models\Notifications;
 use App\Models\Community;
+use App\Models\Coupons;
+use App\Models\Cart;
+use App\Models\UserReview;
 use App\Events\MessageSent;
 use App\Events\NotificationSent;
 use App\Events\CommunityCreated;
+use Illuminate\Support\Facades\Session;
 
 class UserController extends Controller
 {
@@ -22,7 +25,11 @@ class UserController extends Controller
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
         $navbarCategories = Category::orderBy('created_at', 'asc')->get();
-        return view('user.dashboard', compact('categories', 'products', 'navbarCategories',));
+		$reviewsByProduct = UserReview::where('user_id', auth()->id())->get()->groupBy('product_id');
+
+
+
+        return view('user.dashboard', compact('categories', 'products', 'navbarCategories','reviewsByProduct'));
     }
 
     public function singleproduct($id) {
@@ -246,9 +253,82 @@ class UserController extends Controller
 		return response()->json($communities);
 	}
 
+<<<<<<< HEAD
 	public function showCategoryProducts($slug)
 	{
         // dd($slug);
+=======
+
+	// public function showCategoryProducts($slug)
+	// {
+	// 	$categories = Category::latest()->get();
+    //     $products = Product::with('category')->latest()->get();
+    //     // view()->share('categories', $categories);
+    //     $navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+	// 	$category = Category::where('name', $slug)->firstOrFail();
+	// 	$products = $category->products()->latest()->get();
+
+	// 	return view('user.category-products', compact('category', 'products', 'categories', 'products', 'navbarCategories'));
+	// }
+
+	public function showCategoryProducts($slug, Request $request)
+	{
+		$category = Category::where('name', $slug)->firstOrFail();
+		$categories = Category::latest()->get();
+		$navbarCategories = Category::orderBy('created_at', 'asc')->get();
+
+		$query = $category->products()->with(['category', 'wishlistedBy'])->latest();
+
+		if ($request->filled('min_price')) {
+			$query->where('regular_license_price', '>=', $request->min_price);
+		}
+
+		if ($request->filled('max_price')) {
+			$query->where('regular_license_price', '<=', $request->max_price);
+		}
+
+		if ($request->filled('rating')) {
+			$query->where('rating', '>=', $request->rating);
+		}
+
+		$products = $query->get();
+
+		// Mark each product as wishlisted
+		$products->each(function ($product) {
+			$product->is_wishlisted = auth()->check() && $product->wishlistedBy->contains(auth()->id());
+		});
+
+		if ($request->ajax()) {
+			$html = view('user.product-cards', compact('products'))->render();
+			return response()->json(['html' => $html]);
+		}
+
+		return view('user.category-products', compact('category', 'products', 'categories', 'navbarCategories'));
+	}
+
+
+	public function addWhislist(Request $request)
+	{
+		$request->validate([
+			'product_id' => 'required|exists:products,id'
+		]);
+
+		$user = auth()->user();
+		$productId = $request->product_id;
+
+		if ($user->wishlist()->where('product_id', $productId)->exists()) {
+			$user->wishlist()->detach($productId);
+			return response()->json(['status' => 'removed']);
+		} else {
+			$user->wishlist()->attach($productId);
+			return response()->json(['status' => 'added']);
+		}
+	}
+
+	public function singleDetailsCategory($id){
+		$product = Product::findOrFail($id);
+
 		$categories = Category::latest()->get();
         $products = Product::with('category')->latest()->get();
         // view()->share('categories', $categories);
@@ -259,6 +339,75 @@ class UserController extends Controller
 
 		return view('user.category-products', compact('category', 'products', 'categories', 'products', 'navbarCategories'));
 	}
+
+	public function applyCoupon(Request $request)
+	{
+		$code = $request->coupon_code;
+		$userId = auth()->id();
+
+		$coupon = Coupons::where('code', $code)
+			->where('status', 'active')
+			->first();
+
+		if (!$coupon) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Invalid or inactive coupon code.'
+			]);
+		}
+
+		if ($coupon->expires_at && now()->greaterThan($coupon->expires_at)) {
+			return response()->json([
+				'success' => false,
+				'message' => 'This coupon has expired.'
+			]);
+		}
+
+		if (!is_null($coupon->usage_limit) && $coupon->usage_limit <= 0) {
+			return response()->json([
+				'success' => false,
+				'message' => 'This coupon has reached its usage limit.'
+			]);
+		}
+
+		$cartItems = Cart::with('product')
+			->where('user_id', $userId)
+			->get();
+
+		$subtotal = $cartItems->sum(function ($item) {
+			return $item->price * $item->quantity;
+		});
+
+		if ($subtotal < $coupon->minimum_order_amount) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Minimum order amount not met for this coupon.'
+			]);
+		}
+
+		$discount = 0;
+		if (!is_null($coupon->discount_amount)) {
+			$discount = $coupon->discount_amount;
+		} elseif (!is_null($coupon->discount_percentage)) {
+			$discount = $subtotal * ($coupon->discount_percentage / 100);
+		}
+
+		$tax = $subtotal * 0.1;
+		$total = ($subtotal + $tax) - $discount;
+
+		return response()->json([
+			'success' => true,
+			'message' => 'Coupon applied successfully!',
+			'summary' => [
+				'subtotal' => number_format($subtotal, 2),
+				'discount' => number_format($discount, 2),
+				'tax' => number_format($tax, 2),
+				'total' => number_format($total, 2),
+				'totalItems' => $cartItems->sum('quantity'),
+			]
+		]);
+	}
+
 
 
 }
